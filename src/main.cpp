@@ -2,6 +2,7 @@
 #include <string>
 
 #include "Parser/Parser.h"
+#include "Evaluator/Evaluator.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -20,7 +21,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         return 0;
     }
 
-    // Evaluate
+    // Evaluate AST
+    Evaluator astEvaluator(inputParser.getAST());
 
     return 0;
 }

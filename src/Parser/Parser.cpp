@@ -40,7 +40,7 @@ bool isUnaryMinus(const char previousCharacter, const char character)
                || previousCharacter == cLeftParenthesis);
 }
 
-uint8_t getOperatorPrecedence(char operation)
+uint8_t operatorPrecedence(char operation)
 {
     switch (operation) {
     case cRightParenthesis:
@@ -55,27 +55,6 @@ uint8_t getOperatorPrecedence(char operation)
         return 4;
     }
     return 0;
-}
-
-void printBT(const std::string& prefix, const Node* node, bool isLeft)
-{
-    if (node != nullptr) {
-        std::cout << prefix;
-
-        std::cout << (isLeft ? "├─left: " : "└──right: ");
-
-        // print the value of the node
-        std::cout << node->getNodeValue() << std::endl;
-
-        // enter the next tree level - left and right branch
-        printBT(prefix + (isLeft ? "│   " : "    "), node->getMLeftNode(), true);
-        printBT(prefix + (isLeft ? "│   " : "    "), node->getMRightNode(), false);
-    }
-}
-
-void printBT(const Node* node)
-{
-    printBT("", node, false);
 }
 
 } // namespace
@@ -106,23 +85,21 @@ void Parser::validateInput()
 
         const auto& character = mInputString[stringIndex];
         const auto& previousValidCharacter = validatedString.back();
-        const auto& nextCharacter = (stringIndex == mInputString.size() - 1)
-                                          ? cSpaceChar
-                                          : mInputString[stringIndex + 1];
+        const auto& nextPossibleCharacter = (stringIndex == mInputString.size() - 1)
+                                                  ? cSpaceChar
+                                                  : mInputString[stringIndex + 1];
 
         // Trim input string
         if (character == cSpaceChar) {
             continue;
         }
         // Check digits validity
-        else if (isSingleDigitInteger(character, nextCharacter)) {
+        else if (isSingleDigitInteger(character, nextPossibleCharacter)) {
 
             // Check parenthesis right bounds
             if (previousValidCharacter == cRightParenthesis) {
                 throw std::invalid_argument("Invalid expression provided");
             }
-
-            validatedString.push_back(character);
         }
         // Check operators validity
         else if (isOperator(character)) {
@@ -137,8 +114,6 @@ void Parser::validateInput()
                 || previousValidCharacter == cSpaceChar) {
                 throw std::invalid_argument("Invalid expression provided");
             }
-
-            validatedString.push_back(character);
         }
         // Check parenthesis validity
         else if (isParenthesis(character)) {
@@ -154,11 +129,11 @@ void Parser::validateInput()
             if (character == cLeftParenthesis && (std::isdigit(previousValidCharacter))) {
                 throw std::invalid_argument("Invalid expression provided");
             }
-
-            validatedString.push_back(character);
         } else {
             throw std::invalid_argument("Invalid character used");
         }
+
+        validatedString.push_back(character);
     }
 
     // Validate the amount of parenthesis pairs
@@ -181,17 +156,17 @@ void Parser::createAST()
 {
     std::cout << "Creating AST\n";
 
-    const auto processNode = [this]() {
+    const auto generateNewNode = [this]() {
         const auto operation = operatorStack.top();
         operatorStack.pop();
 
-        const auto valueRight = valueStack.top();
+        const auto valueRight = std::move(valueStack.top());
         valueStack.pop();
 
-        const auto valueLeft = valueStack.top();
+        const auto valueLeft = std::move(valueStack.top());
         valueStack.pop();
 
-        valueStack.push(new Node(operation, valueLeft, valueRight));
+        valueStack.push(std::make_shared<Node>(operation, valueLeft, valueRight));
     };
 
     for (const auto& character : mInputString) {
@@ -202,18 +177,18 @@ void Parser::createAST()
             operatorStack.push(character);
         } else if (character == cRightParenthesis) {
             while (!operatorStack.empty() && operatorStack.top() != cLeftParenthesis) {
-                processNode();
+                generateNewNode();
             }
 
             // Pop left parenthesis
             if (!operatorStack.empty()) {
                 operatorStack.pop();
             }
+
         } else if (isOperator(character)) {
             while (!operatorStack.empty()
-                   && getOperatorPrecedence(character)
-                            >= getOperatorPrecedence(operatorStack.top())) {
-                processNode();
+                   && operatorPrecedence(character) >= operatorPrecedence(operatorStack.top())) {
+                generateNewNode();
             }
 
             operatorStack.push(character);
@@ -221,8 +196,11 @@ void Parser::createAST()
     }
 
     while (!operatorStack.empty()) {
-        processNode();
+        generateNewNode();
     }
+}
 
-    printBT(valueStack.top());
+std::shared_ptr<Node> Parser::getAST()
+{
+    return valueStack.top();
 }

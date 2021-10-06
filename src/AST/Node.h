@@ -5,51 +5,31 @@
 class Node
 {
 public:
-    Node() = default;
-
-    explicit Node(char nodeValue, Node* leftNode = nullptr, Node* rightNode = nullptr)
+    explicit Node(char nodeValue,
+                  std::shared_ptr<Node> leftNode = nullptr,
+                  std::shared_ptr<Node> rightNode = nullptr)
         : mNodeValue{nodeValue}
-        , mLeftNode{leftNode}
-        , mRightNode{rightNode}
+        , mLeftNode{std::move(leftNode)}
+        , mRightNode{std::move(rightNode)}
     {
     }
 
-    Node& operator=(const Node& nodeToCopy)
+    char getNodeValue() const
     {
-        mNodeValue = nodeToCopy.mNodeValue;
-        mLeftNode = nodeToCopy.mLeftNode;
-        mRightNode = nodeToCopy.mRightNode;
-        return *this;
-    }
-
-    char getNodeValue() const{
         return mNodeValue;
     }
 
-    void printNode()
-    {
-        std::cout << "Node value: " << mNodeValue << "\n";
-        if (mLeftNode) {
-            std::cout << "Left ";
-            mLeftNode->printNode();
-        }
-
-        if (mRightNode) {
-            std::cout << "Right ";
-            mRightNode->printNode();
-        }
-    }
     Node* getMLeftNode() const
     {
-        return mLeftNode;
+        return mLeftNode.get();
     }
     Node* getMRightNode() const
     {
-        return mRightNode;
+        return mRightNode.get();
     }
 
 private:
     char mNodeValue{};
-    Node* mLeftNode{nullptr};
-    Node* mRightNode{nullptr};
+    std::shared_ptr<Node> mLeftNode{nullptr};
+    std::shared_ptr<Node> mRightNode{nullptr};
 };
