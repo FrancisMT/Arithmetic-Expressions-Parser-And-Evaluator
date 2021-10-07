@@ -1,6 +1,6 @@
 #include "Evaluator.h"
 
-#include "MathUtils/MathConstants.h"
+#include "MathUtils/Constants.h"
 
 Evaluator::Evaluator(std::shared_ptr<AST::Node> astRootNode)
     : mAstRootNode{std::move(astRootNode)}
@@ -13,22 +13,22 @@ int32_t Evaluator::execute()
         throw std::invalid_argument("Empty AST");
     }
 
-    return traverseAST(mAstRootNode);
+    return analyseAndTraverseASTNode(mAstRootNode);
 }
 
-int32_t Evaluator::traverseAST(const std::shared_ptr<AST::Node>& node)
+int32_t Evaluator::analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& node)
 {
     const auto nodeValue = node->getNodeValue();
 
     if (std::isdigit(nodeValue)) {
         return static_cast<int32_t>(nodeValue - '0');
     } else {
-        const auto leftNodeValue = traverseAST(node->getLeftNode());
-        const auto rightNodeValue = traverseAST(node->getRightNode());
+        const auto leftNodeValue = analyseAndTraverseASTNode(node->getLeftNode());
+        const auto rightNodeValue = analyseAndTraverseASTNode(node->getRightNode());
 
-        using namespace MathUtils;
+        using namespace MathUtils::Constants;
         switch (nodeValue) {
-        case cSumOp:
+        case cAddOp:
             return leftNodeValue + rightNodeValue;
         case cSubOp:
             return leftNodeValue - rightNodeValue;
@@ -36,8 +36,8 @@ int32_t Evaluator::traverseAST(const std::shared_ptr<AST::Node>& node)
             return leftNodeValue * rightNodeValue;
         case cDivOp:
             return leftNodeValue / rightNodeValue;
+        default:
+            return 1;
         }
     }
-
-    return 0;
 }

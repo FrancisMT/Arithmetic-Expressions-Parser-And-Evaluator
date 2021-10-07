@@ -51,7 +51,7 @@ endif ()
 
 # Build options ---------------------------------------------------------------
 option(BUILD_TESTS "Build tests" ON)
-option(BUILD_DOCUMENTATION "Build documentation" OFF)
+option(BUILD_DOCUMENTATION "Build documentation" ON)
 
 # Tests
 if (BUILD_TESTS)

@@ -2,33 +2,65 @@
 
 #include <cctype>
 #include <iostream>
-
-#include "AST/Node.h"
-#include "MathUtils/MathConstants.h"
-
 #include <unordered_set>
 
-namespace {
-using namespace MathUtils;
-constexpr auto cSpaceChar{' '};
-const std::unordered_set<char> cValidParentheses{cLeftParenthesis, cRightParenthesis};
-const std::unordered_set<char> cValidOperators{cSumOp, cSubOp, cMultOp, cDivOp};
+#include "AST/Node.h"
+#include "MathUtils/Constants.h"
 
+namespace {
+using namespace MathUtils::Constants;
+/// Space character used to facilitate the parsing process
+constexpr auto cSpaceChar{' '};
+/// Container with the valid parenthesis used to facilitate the parsing process
+const std::unordered_set cValidParentheses{cLeftParenthesis, cRightParenthesis};
+/// Container with the valid operators used to facilitate the parsing process
+const std::unordered_set cValidOperators{cAddOp, cSubOp, cMultOp, cDivOp};
+
+/**
+ * @brief Checks if the provided character is a parenthesis
+ *
+ * @param character character to evaluate
+ *
+ * @return Boolean containing the verification result
+ */
 bool isParenthesis(const char character)
 {
     return cValidParentheses.count(character);
 }
 
+/**
+ * @brief Checks if the provided character is a valid binary operator
+ *
+ * @param character character to evaluate
+ *
+ * @return Boolean containing the verification result
+ */
 bool isOperator(const char character)
 {
     return cValidOperators.count(character);
 }
 
-bool isSingleDigitInteger(const char character, const char nextCharacter)
+/**
+ * @brief Checks if the provided character is a single digit integer
+ *
+ * @param previousCharacter adjacent character to evaluate (can not be a digit)
+ * @param character character to evaluate
+ *
+ * @return Boolean containing the verification result
+ */
+bool isSingleDigitInteger(const char previousCharacter, const char character)
 {
-    return std::isdigit(character) && (!std::isdigit(nextCharacter) || isOperator(nextCharacter));
+    return !std::isdigit(previousCharacter) && std::isdigit(character);
 }
 
+/**
+ * @brief Checks if the provided character is a unary minus
+ *
+ * @param previousCharacter adjacent character to evaluate (can not be an operator, space or '(')
+ * @param character character to evaluate
+ *
+ * @return Boolean containing the verification result
+ */
 bool isUnaryMinus(const char previousCharacter, const char character)
 {
     return character == cSubOp
@@ -36,6 +68,20 @@ bool isUnaryMinus(const char previousCharacter, const char character)
                || previousCharacter == cLeftParenthesis);
 }
 
+/**
+ * @brief Checks precedence "score" of an operator
+ *
+ * This helper method is used during the construction of the AST: each operator being processed
+ * causes its preceding operators to "execute" (new nodes in the AST are created) only if it has a
+ * higher precedence value
+ *
+ * Opening parentheses act as operators with a very high precedence value
+ * Closing parentheses act as operators with a very low precedence value
+ *
+ * @param operation operator to check the precedence of
+ *
+ * @return The operator's precedence value
+ */
 uint8_t operatorPrecedence(char operation)
 {
     switch (operation) {
@@ -44,15 +90,15 @@ uint8_t operatorPrecedence(char operation)
     case cMultOp:
     case cDivOp:
         return 2;
-    case cSumOp:
+    case cAddOp:
     case cSubOp:
         return 3;
     case cLeftParenthesis:
         return 4;
+    default:
+        return 0;
     }
-    return 0;
 }
-
 } // namespace
 
 Parser::Parser(std::string&& inputToParse)
@@ -64,6 +110,12 @@ void Parser::execute()
 {
     validateInput();
     createAST();
+}
+
+std::shared_ptr<AST::Node> Parser::getAST()
+{
+    auto rootNode = valueStack.top();
+    return rootNode;
 }
 
 void Parser::validateInput()
@@ -85,18 +137,15 @@ void Parser::validateInput()
 
         const auto& character = mInputString[stringIndex];
         const auto& previousValidCharacter = validatedString.back();
-        const auto& nextPossibleCharacter = (stringIndex == mInputString.size() - 1)
-                                                  ? cSpaceChar
-                                                  : mInputString[stringIndex + 1];
 
         // Trim input string
         if (character == cSpaceChar) {
             continue;
         }
         // Check digits validity
-        else if (isSingleDigitInteger(character, nextPossibleCharacter)) {
+        else if (isSingleDigitInteger(previousValidCharacter, character)) {
 
-            // Check parenthesis right bounds
+            // Right parenthesis should not be follower by a digit
             if (previousValidCharacter == cRightParenthesis) {
                 throw std::invalid_argument("Invalid expression provided");
             }
@@ -110,8 +159,7 @@ void Parser::validateInput()
             }
 
             // Check if the operator syntax is correct
-            if (isOperator(previousValidCharacter) || previousValidCharacter == cLeftParenthesis
-                || previousValidCharacter == cSpaceChar) {
+            if (isOperator(previousValidCharacter) || previousValidCharacter == cLeftParenthesis) {
                 throw std::invalid_argument("Invalid expression provided");
             }
         }
@@ -125,7 +173,7 @@ void Parser::validateInput()
                 ++rightParenthesisCounter;
             }
 
-            // Check parenthesis left bounds
+            // Left parenthesis should not be preceded by a digit
             if (character == cLeftParenthesis && (std::isdigit(previousValidCharacter))) {
                 throw std::invalid_argument("Invalid expression provided");
             }
@@ -162,16 +210,17 @@ void Parser::createAST()
             const auto operation = operatorStack.top();
             operatorStack.pop();
 
-            const auto valueRight = std::move(valueStack.top());
+            const auto rightValue = std::move(valueStack.top());
             valueStack.pop();
 
-            const auto valueLeft = std::move(valueStack.top());
+            const auto leftValue = std::move(valueStack.top());
             valueStack.pop();
 
-            valueStack.push(std::make_shared<AST::Node>(operation, valueLeft, valueRight));
+            valueStack.emplace(std::make_shared<AST::Node>(operation, leftValue, rightValue));
         }
     };
 
+    // Analyse input
     for (const auto& character : mInputString) {
 
         if (std::isdigit(character)) {
@@ -187,7 +236,6 @@ void Parser::createAST()
             if (!operatorStack.empty()) {
                 operatorStack.pop();
             }
-
         } else if (isOperator(character)) {
             while (!operatorStack.empty()
                    && operatorPrecedence(character) >= operatorPrecedence(operatorStack.top())) {
@@ -198,19 +246,14 @@ void Parser::createAST()
         }
     }
 
+    // Generates new nodes until the operator stack is empty
     while (!operatorStack.empty()) {
         generateNewNode();
     }
 
+    // Print AST for debugging purposes
     if (!valueStack.empty()) {
         std::cout << "Generated Abstract Syntax Tree\n";
         valueStack.top()->printNode();
     }
-}
-
-std::shared_ptr<AST::Node> Parser::getAST()
-{
-    auto rootNode = valueStack.top();
-    valueStack.pop();
-    return rootNode;
 }
