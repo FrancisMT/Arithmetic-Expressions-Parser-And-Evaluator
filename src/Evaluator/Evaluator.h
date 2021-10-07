@@ -6,6 +6,8 @@
 
 /**
  * @brief Class responsible for evaluating arithmetic expressions contained in an AST
+ *
+ * Evaluation is only performed on integers
  */
 class Evaluator
 {
@@ -32,7 +34,7 @@ private:
      *
      * @return Final value of the node
      */
-    int32_t analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& node);
+    float analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& node);
 
 private:
     /// Abstract syntax tree root node

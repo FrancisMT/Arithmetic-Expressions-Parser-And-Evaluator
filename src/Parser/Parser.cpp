@@ -2,6 +2,7 @@
 
 #include <cctype>
 #include <iostream>
+#include <utility>
 #include <unordered_set>
 
 #include "AST/Node.h"
@@ -101,7 +102,7 @@ uint8_t operatorPrecedence(char operation)
 }
 } // namespace
 
-Parser::Parser(std::string&& inputToParse)
+Parser::Parser(const std::string& inputToParse)
     : mInputString{inputToParse}
 {
 }
@@ -133,9 +134,8 @@ void Parser::validateInput()
     uint8_t leftParenthesisCounter{0};
     uint8_t rightParenthesisCounter{0};
 
-    for (std::size_t stringIndex = 0; stringIndex < mInputString.size(); ++stringIndex) {
+    for (const auto& character : mInputString) {
 
-        const auto& character = mInputString[stringIndex];
         const auto& previousValidCharacter = validatedString.back();
 
         // Trim input string
@@ -254,6 +254,6 @@ void Parser::createAST()
     // Print AST for debugging purposes
     if (!valueStack.empty()) {
         std::cout << "Generated Abstract Syntax Tree\n";
-        valueStack.top()->printNode();
+        AST::printAST(valueStack.top().get());
     }
 }

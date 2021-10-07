@@ -56,32 +56,6 @@ public:
         return mRightNode;
     }
 
-    /**
-     * @brief Helper method used to print the contents of the node horizontally
-     */
-    void printNode()
-    {
-        printNodeInternal(this);
-    }
-
-private:
-    /**
-     * @brief Method used for recursively print the node's contents
-     *
-     * Recursive calls are made in order to print the content of every child node's value
-     *
-     * @param node Node whose content will be accessed and printed out
-     * @param prefix helper string used to beautify the outputted data
-     */
-    void printNodeInternal(const Node* node, std::string&& prefix = "")
-    {
-        if (node) {
-            std::cout << prefix << node->getNodeValue() << "\n";
-            printNodeInternal(node->getLeftNode().get(), prefix + "    ");
-            printNodeInternal(node->getRightNode().get(), prefix + "    ");
-        }
-    }
-
 private:
     /// Value being held by the node
     char mNodeValue{};
@@ -90,4 +64,53 @@ private:
     /// Right child node
     std::shared_ptr<Node> mRightNode{nullptr};
 };
+
+/**
+ * @brief Helper method used to count total number of nodes inside an AST
+ *
+ * @param rootNode Root node of the AST
+ *
+ * @return Number of nodes inside the AST
+ */
+[[nodiscard]] inline uint32_t getNumberOfNodes(const Node* rootNode)
+{
+    return !rootNode ? 0
+                     : 1 + getNumberOfNodes(rootNode->getLeftNode().get())
+                             + getNumberOfNodes(rootNode->getRightNode().get());
+}
+
+/**
+ * @brief Helper method used to print (horizontally) the contents of an AST
+ *
+ * Recursive calls are made in order to print the content of every child rootNode's value
+ *
+ * @param rootNode Root node of the AST
+ * @param prefix helper string used to beautify the outputted data
+ */
+inline void printAST(const Node* rootNode, std::string&& prefix = "")
+{
+    if (rootNode) {
+        std::cout << prefix << rootNode->getNodeValue() << "\n";
+        printAST(rootNode->getLeftNode().get(), prefix + "    ");
+        printAST(rootNode->getRightNode().get(), prefix + "    ");
+    }
+}
+
+/**
+ * @brief Helper method used to compare two ASTs
+ *
+ * @param rootNodeA Root node of the first AST
+ * @param rootNodeB Root node of the second AST
+ *
+ * @return Boolean containing the comparison result
+ */
+[[nodiscard]] inline bool areASTsIdentical(const Node* rootNodeA, const Node* rootNodeB)
+{
+    return (!rootNodeA && !rootNodeB)
+           || ((rootNodeA && rootNodeB) && (rootNodeA->getNodeValue() == rootNodeB->getNodeValue())
+               && areASTsIdentical(rootNodeA->getLeftNode().get(), rootNodeB->getLeftNode().get())
+               && areASTsIdentical(rootNodeA->getRightNode().get(),
+                                   rootNodeB->getRightNode().get()));
+}
+
 } // namespace AST

@@ -13,15 +13,15 @@ int32_t Evaluator::execute()
         throw std::invalid_argument("Empty AST");
     }
 
-    return analyseAndTraverseASTNode(mAstRootNode);
+    return static_cast<int32_t>(analyseAndTraverseASTNode(mAstRootNode));
 }
 
-int32_t Evaluator::analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& node)
+float Evaluator::analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& node)
 {
     const auto nodeValue = node->getNodeValue();
 
     if (std::isdigit(nodeValue)) {
-        return static_cast<int32_t>(nodeValue - '0');
+        return static_cast<float>(nodeValue - '0');
     } else {
         const auto leftNodeValue = analyseAndTraverseASTNode(node->getLeftNode());
         const auto rightNodeValue = analyseAndTraverseASTNode(node->getRightNode());

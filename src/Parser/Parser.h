@@ -17,7 +17,7 @@ public:
      *
      * @param inputToParse String containing data to be parsed
      */
-    explicit Parser(std::string&& inputToParse);
+    explicit Parser(const std::string& inputToParse);
 
     /**
      * @brief Checks the input for a valid arithmetic expressions and generates the appropriate AST

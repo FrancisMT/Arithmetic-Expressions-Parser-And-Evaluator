@@ -12,7 +12,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     std::getline(std::cin, input);
 
     // Parse
-    Parser inputParser(std::move(input));
+    Parser inputParser(input);
     try {
         inputParser.execute();
     }
