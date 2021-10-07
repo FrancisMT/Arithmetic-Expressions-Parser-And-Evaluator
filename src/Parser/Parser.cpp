@@ -49,7 +49,7 @@ bool isOperator(const char character)
  *
  * @return Boolean containing the verification result
  */
-bool isSingleDigitInteger(const char previousCharacter, const char character)
+constexpr bool isSingleDigitInteger(const char previousCharacter, const char character)
 {
     return !std::isdigit(previousCharacter) && std::isdigit(character);
 }
@@ -62,7 +62,7 @@ bool isSingleDigitInteger(const char previousCharacter, const char character)
  *
  * @return Boolean containing the verification result
  */
-bool isUnaryMinus(const char previousCharacter, const char character)
+constexpr bool isUnaryMinus(const char previousCharacter, const char character)
 {
     return character == cSubOp
            && (isOperator(previousCharacter) || previousCharacter == cSpaceChar
@@ -83,7 +83,7 @@ bool isUnaryMinus(const char previousCharacter, const char character)
  *
  * @return The operator's precedence value
  */
-uint8_t operatorPrecedence(char operation)
+constexpr uint8_t operatorPrecedence(char operation)
 {
     switch (operation) {
     case cRightParenthesis:
@@ -115,8 +115,7 @@ void Parser::execute()
 
 std::shared_ptr<AST::Node> Parser::getAST()
 {
-    auto rootNode = valueStack.top();
-    return rootNode;
+    return valueStack.top();
 }
 
 void Parser::validateInput()
@@ -145,7 +144,7 @@ void Parser::validateInput()
         // Check digits validity
         else if (isSingleDigitInteger(previousValidCharacter, character)) {
 
-            // Right parenthesis should not be follower by a digit
+            // Right parenthesis should not be followed by a digit
             if (previousValidCharacter == cRightParenthesis) {
                 throw std::invalid_argument("Invalid expression provided");
             }
@@ -174,7 +173,7 @@ void Parser::validateInput()
             }
 
             // Left parenthesis should not be preceded by a digit
-            if (character == cLeftParenthesis && (std::isdigit(previousValidCharacter))) {
+            if (character == cLeftParenthesis && std::isdigit(previousValidCharacter)) {
                 throw std::invalid_argument("Invalid expression provided");
             }
         } else {
@@ -189,7 +188,7 @@ void Parser::validateInput()
         throw std::invalid_argument("Parenthesis do not match");
     }
 
-    // Validate that the expression does not end with an operation
+    // Validate that the expression does not end with an operator
     if (isOperator(validatedString.back())) {
         throw std::invalid_argument("Invalid expression provided");
     }
@@ -225,8 +224,10 @@ void Parser::createAST()
 
         if (std::isdigit(character)) {
             valueStack.emplace(std::make_shared<AST::Node>(character));
+
         } else if (character == cLeftParenthesis) {
             operatorStack.push(character);
+
         } else if (character == cRightParenthesis) {
             while (!operatorStack.empty() && operatorStack.top() != cLeftParenthesis) {
                 generateNewNode();

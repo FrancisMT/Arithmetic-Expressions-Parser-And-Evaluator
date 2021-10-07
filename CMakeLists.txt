@@ -47,8 +47,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     )
 endif ()
 
-# Dependencies ----------------------------------------------------------------
-
 # Build options ---------------------------------------------------------------
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DOCUMENTATION "Build documentation" ON)
@@ -91,4 +89,3 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
 message(STATUS "BUILD_DOCUMENTATION: ${BUILD_DOCUMENTATION}")
 message(STATUS)
-

@@ -7,7 +7,7 @@
 #include "AST/Node.h"
 
 /**
- * @brief Class responsible for parsing arithmetic expressions into a AST
+ * @brief Class responsible for parsing arithmetic expressions into an AST
  */
 class Parser
 {
@@ -20,7 +20,7 @@ public:
     explicit Parser(const std::string& inputToParse);
 
     /**
-     * @brief Checks the input for a valid arithmetic expressions and generates the appropriate AST
+     * @brief Checks the input for a valid arithmetic expression and generates the appropriate AST
      */
     void execute();
 

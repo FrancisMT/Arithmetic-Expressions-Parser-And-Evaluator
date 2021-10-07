@@ -66,7 +66,7 @@ private:
 };
 
 /**
- * @brief Helper method used to count total number of nodes inside an AST
+ * @brief Helper method used to count the total number of nodes inside an AST
  *
  * @param rootNode Root node of the AST
  *

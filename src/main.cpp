@@ -6,12 +6,12 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-    // Get input
+    // Get input from user
     std::cout << "Input Arithmetic expression to evaluate: ";
     std::string input;
     std::getline(std::cin, input);
 
-    // Parse
+    // Parse input into an AST
     Parser inputParser(input);
     try {
         inputParser.execute();
@@ -21,7 +21,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
         return 0;
     }
 
-    // Evaluate AST
+    // Evaluate AST and output result
     Evaluator astEvaluator(inputParser.getAST());
     try {
         std::cout << "Arithmetic Expression Result: " << astEvaluator.execute() << "\n";

@@ -2,6 +2,34 @@
 
 #include "MathUtils/Constants.h"
 
+namespace {
+/**
+ * @brief Performs an arithmetic operation
+ *
+ * @param operation Binary operation type
+ * @param leftOperand Left Operand
+ * @param rightOperand Right Operand
+ *
+ * @return Operation result
+ */
+constexpr auto performArithmeticOperation(char operation, float leftOperand, float rightOperand)
+{
+    using namespace MathUtils::Constants;
+    switch (operation) {
+    case cAddOp:
+        return leftOperand + rightOperand;
+    case cSubOp:
+        return leftOperand - rightOperand;
+    case cMultOp:
+        return leftOperand * rightOperand;
+    case cDivOp:
+        return leftOperand / rightOperand;
+    default:
+        return 1.f;
+    }
+}
+} // namespace
+
 Evaluator::Evaluator(std::shared_ptr<AST::Node> astRootNode)
     : mAstRootNode{std::move(astRootNode)}
 {
@@ -26,18 +54,6 @@ float Evaluator::analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& nod
         const auto leftNodeValue = analyseAndTraverseASTNode(node->getLeftNode());
         const auto rightNodeValue = analyseAndTraverseASTNode(node->getRightNode());
 
-        using namespace MathUtils::Constants;
-        switch (nodeValue) {
-        case cAddOp:
-            return leftNodeValue + rightNodeValue;
-        case cSubOp:
-            return leftNodeValue - rightNodeValue;
-        case cMultOp:
-            return leftNodeValue * rightNodeValue;
-        case cDivOp:
-            return leftNodeValue / rightNodeValue;
-        default:
-            return 1;
-        }
+        return performArithmeticOperation(nodeValue, leftNodeValue, rightNodeValue);
     }
 }

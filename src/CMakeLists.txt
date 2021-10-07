@@ -12,5 +12,3 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE parser
     PRIVATE evaluator
 )
-
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
