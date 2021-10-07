@@ -12,7 +12,7 @@ public:
 
     void execute();
 
-    std::shared_ptr<Node> getAST();
+    std::shared_ptr<AST::Node> getAST();
 
 private:
     void validateInput();
@@ -22,5 +22,5 @@ private:
     std::string mInputString;
 
     std::stack<char> operatorStack;
-    std::stack<std::shared_ptr<Node>> valueStack;
+    std::stack<std::shared_ptr<AST::Node>> valueStack;
 };

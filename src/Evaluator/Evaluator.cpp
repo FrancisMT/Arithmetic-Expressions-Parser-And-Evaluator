@@ -1,34 +1,43 @@
-//
-// Created by ctw00111 on 06/10/21.
-//
-
 #include "Evaluator.h"
 
-namespace {
+#include "MathUtils/MathConstants.h"
 
-void printBT(const std::string& prefix, const Node* node, bool isLeft)
+Evaluator::Evaluator(std::shared_ptr<AST::Node> astRootNode)
+    : mAstRootNode{std::move(astRootNode)}
 {
-    if (node != nullptr) {
-        std::cout << prefix;
+}
 
-        std::cout << (isLeft ? "├─left: " : "└──right: ");
-
-        // print the value of the node
-        std::cout << node->getNodeValue() << std::endl;
-
-        // enter the next tree level - left and right branch
-        printBT(prefix + (isLeft ? "│   " : "    "), node->getMLeftNode(), true);
-        printBT(prefix + (isLeft ? "│   " : "    "), node->getMRightNode(), false);
+int32_t Evaluator::execute()
+{
+    if (!mAstRootNode) {
+        throw std::invalid_argument("Empty AST");
     }
+
+    return traverseAST(mAstRootNode);
 }
 
-void printBT(const Node* node)
+int32_t Evaluator::traverseAST(const std::shared_ptr<AST::Node>& node)
 {
-    printBT("", node, false);
-}
+    const auto nodeValue = node->getNodeValue();
 
-}
-Evaluator::Evaluator(std::shared_ptr<Node> astRootNode) {
+    if (std::isdigit(nodeValue)) {
+        return static_cast<int32_t>(nodeValue - '0');
+    } else {
+        const auto leftNodeValue = traverseAST(node->getLeftNode());
+        const auto rightNodeValue = traverseAST(node->getRightNode());
 
-    printBT(astRootNode.get());
+        using namespace MathUtils;
+        switch (nodeValue) {
+        case cSumOp:
+            return leftNodeValue + rightNodeValue;
+        case cSubOp:
+            return leftNodeValue - rightNodeValue;
+        case cMultOp:
+            return leftNodeValue * rightNodeValue;
+        case cDivOp:
+            return leftNodeValue / rightNodeValue;
+        }
+    }
+
+    return 0;
 }

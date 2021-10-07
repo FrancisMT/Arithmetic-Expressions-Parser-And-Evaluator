@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include "Parser/Parser.h"
 #include "Evaluator/Evaluator.h"
+#include "Parser/Parser.h"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -23,6 +23,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
     // Evaluate AST
     Evaluator astEvaluator(inputParser.getAST());
+    try {
+        std::cout << "Arithmetic Expression Result: " << astEvaluator.execute() << "\n";
+    }
+    catch (const std::invalid_argument& e) {
+        std::cerr << "Error thrown during AST evaluation: " << e.what() << "\n";
+        return 0;
+    }
 
     return 0;
 }

@@ -4,17 +4,13 @@
 #include <iostream>
 
 #include "AST/Node.h"
+#include "MathUtils/MathConstants.h"
 
 #include <unordered_set>
 
 namespace {
+using namespace MathUtils;
 constexpr auto cSpaceChar{' '};
-constexpr auto cLeftParenthesis{'('};
-constexpr auto cRightParenthesis{')'};
-constexpr auto cSumOp{'+'};
-constexpr auto cSubOp{'-'};
-constexpr auto cMultOp{'*'};
-constexpr auto cDivOp{'/'};
 const std::unordered_set<char> cValidParentheses{cLeftParenthesis, cRightParenthesis};
 const std::unordered_set<char> cValidOperators{cSumOp, cSubOp, cMultOp, cDivOp};
 
@@ -73,6 +69,10 @@ void Parser::execute()
 void Parser::validateInput()
 {
     std::cout << "Validating input string: " << mInputString << "\n";
+
+    if (mInputString.empty()) {
+        throw std::invalid_argument("Empty expression provided");
+    }
 
     // String will be wrapped around parenthesis for easier parsing
     std::string validatedString{cLeftParenthesis};
@@ -154,25 +154,28 @@ void Parser::validateInput()
 
 void Parser::createAST()
 {
-    std::cout << "Creating AST\n";
+    std::cout << "Generating Abstract Syntax Tree\n";
 
     const auto generateNewNode = [this]() {
-        const auto operation = operatorStack.top();
-        operatorStack.pop();
+        if (!operatorStack.empty() && !valueStack.empty()) {
 
-        const auto valueRight = std::move(valueStack.top());
-        valueStack.pop();
+            const auto operation = operatorStack.top();
+            operatorStack.pop();
 
-        const auto valueLeft = std::move(valueStack.top());
-        valueStack.pop();
+            const auto valueRight = std::move(valueStack.top());
+            valueStack.pop();
 
-        valueStack.push(std::make_shared<Node>(operation, valueLeft, valueRight));
+            const auto valueLeft = std::move(valueStack.top());
+            valueStack.pop();
+
+            valueStack.push(std::make_shared<AST::Node>(operation, valueLeft, valueRight));
+        }
     };
 
     for (const auto& character : mInputString) {
 
         if (std::isdigit(character)) {
-            valueStack.emplace(new Node(character));
+            valueStack.emplace(std::make_shared<AST::Node>(character));
         } else if (character == cLeftParenthesis) {
             operatorStack.push(character);
         } else if (character == cRightParenthesis) {
@@ -198,9 +201,16 @@ void Parser::createAST()
     while (!operatorStack.empty()) {
         generateNewNode();
     }
+
+    if (!valueStack.empty()) {
+        std::cout << "Generated Abstract Syntax Tree\n";
+        valueStack.top()->printNode();
+    }
 }
 
-std::shared_ptr<Node> Parser::getAST()
+std::shared_ptr<AST::Node> Parser::getAST()
 {
-    return valueStack.top();
+    auto rootNode = valueStack.top();
+    valueStack.pop();
+    return rootNode;
 }
