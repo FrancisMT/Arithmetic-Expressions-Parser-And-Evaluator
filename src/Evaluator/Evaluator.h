@@ -15,9 +15,9 @@ public:
     /**
      * @brief Class constructor
      *
-     * @param astRootNode Root node of an Abstract Syntax Tree (AST)
+     * @param astRootNode Reference to the toot node of an Abstract Syntax Tree (AST)
      */
-    explicit Evaluator(std::shared_ptr<AST::Node> astRootNode);
+    explicit Evaluator(const std::unique_ptr<AST::Node>& astRootNode);
 
     /**
      * @brief Evaluates an arithmetic expression held by the AST and outputs a result
@@ -30,13 +30,13 @@ private:
     /**
      * @brief Helper method used to recursively traverse the AST and evaluate each node's content
      *
-     * @param node AST node to analyse
+     * @param node Reference to an AST node to analyse
      *
      * @return Final value of the node
      */
-    float analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& node);
+    float analyseAndTraverseASTNode(const std::unique_ptr<AST::Node>& node);
 
 private:
-    /// Abstract syntax tree root node
-    std::shared_ptr<AST::Node> mAstRootNode;
+    /// Reference to an Abstract syntax tree root node
+    const std::unique_ptr<AST::Node>& mAstRootNode;
 };

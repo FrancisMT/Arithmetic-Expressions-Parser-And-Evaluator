@@ -47,6 +47,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     )
 endif ()
 
+
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    add_compile_definitions(DEBUG_BUILD)
+endif()
+
 # Build options ---------------------------------------------------------------
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DOCUMENTATION "Build documentation" ON)

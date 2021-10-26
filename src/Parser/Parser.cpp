@@ -12,10 +12,6 @@ namespace {
 using namespace MathUtils::Constants;
 /// Space character used to facilitate the parsing process
 constexpr auto cSpaceChar{' '};
-/// Container with the valid parenthesis used to facilitate the parsing process
-const std::unordered_set cValidParentheses{cLeftParenthesis, cRightParenthesis};
-/// Container with the valid operators used to facilitate the parsing process
-const std::unordered_set cValidOperators{cAddOp, cSubOp, cMultOp, cDivOp};
 
 /**
  * @brief Checks if the provided character is a parenthesis
@@ -24,9 +20,15 @@ const std::unordered_set cValidOperators{cAddOp, cSubOp, cMultOp, cDivOp};
  *
  * @return Boolean containing the verification result
  */
-bool isParenthesis(const char character)
+constexpr bool isParenthesis(const char character)
 {
-    return cValidParentheses.count(character);
+    switch (character) {
+    case cLeftParenthesis:
+    case cRightParenthesis:
+        return true;
+    default:
+        return false;
+    }
 }
 
 /**
@@ -36,9 +38,17 @@ bool isParenthesis(const char character)
  *
  * @return Boolean containing the verification result
  */
-bool isOperator(const char character)
+constexpr bool isOperator(const char character)
 {
-    return cValidOperators.count(character);
+    switch (character) {
+    case cAddOp:
+    case cSubOp:
+    case cMultOp:
+    case cDivOp:
+        return true;
+    default:
+        return false;
+    }
 }
 
 /**
@@ -76,8 +86,8 @@ constexpr bool isUnaryMinus(const char previousCharacter, const char character)
  * causes its preceding operators to "execute" (new nodes in the AST are created) only if it has a
  * higher precedence value
  *
- * Opening parentheses act as operators with a very high precedence value
- * Closing parentheses act as operators with a very low precedence value
+ * Opening parentheses act as operators with a very low precedence value
+ * Closing parentheses act as operators with a very right precedence value
  *
  * @param operation operator to check the precedence of
  *
@@ -87,15 +97,15 @@ constexpr uint8_t operatorPrecedence(char operation)
 {
     switch (operation) {
     case cRightParenthesis:
-        return 1;
+        return 4;
     case cMultOp:
     case cDivOp:
-        return 2;
+        return 3;
     case cAddOp:
     case cSubOp:
-        return 3;
+        return 2;
     case cLeftParenthesis:
-        return 4;
+        return 1;
     default:
         return 0;
     }
@@ -113,9 +123,9 @@ void Parser::execute()
     createAST();
 }
 
-std::shared_ptr<AST::Node> Parser::getAST()
+const std::unique_ptr<AST::Node>& Parser::getAST() const
 {
-    return valueStack.top();
+    return mValueStack.top();
 }
 
 void Parser::validateInput()
@@ -204,18 +214,19 @@ void Parser::createAST()
     std::cout << "Generating Abstract Syntax Tree\n";
 
     const auto generateNewNode = [this]() {
-        if (!operatorStack.empty() && !valueStack.empty()) {
+        if (!mOperatorStack.empty() && !mValueStack.empty()) {
 
-            const auto operation = operatorStack.top();
-            operatorStack.pop();
+            const auto operation = mOperatorStack.top();
+            mOperatorStack.pop();
 
-            const auto rightValue = std::move(valueStack.top());
-            valueStack.pop();
+            auto rightValue = std::move(mValueStack.top());
+            mValueStack.pop();
 
-            const auto leftValue = std::move(valueStack.top());
-            valueStack.pop();
+            auto leftValue = std::move(mValueStack.top());
+            mValueStack.pop();
 
-            valueStack.emplace(std::make_shared<AST::Node>(operation, leftValue, rightValue));
+            mValueStack.emplace(std::make_unique<AST::Node>(
+                  operation, std::move(leftValue), std::move(rightValue)));
         }
     };
 
@@ -223,38 +234,41 @@ void Parser::createAST()
     for (const auto& character : mInputString) {
 
         if (std::isdigit(character)) {
-            valueStack.emplace(std::make_shared<AST::Node>(character));
+            mValueStack.emplace(std::make_unique<AST::Node>(character));
+
+        } else if (isOperator(character)) {
+            while (!mOperatorStack.empty()
+                   && operatorPrecedence(mOperatorStack.top()) >= operatorPrecedence(character)) {
+                generateNewNode();
+            }
+
+            mOperatorStack.push(character);
 
         } else if (character == cLeftParenthesis) {
-            operatorStack.push(character);
+            mOperatorStack.push(character);
+
 
         } else if (character == cRightParenthesis) {
-            while (!operatorStack.empty() && operatorStack.top() != cLeftParenthesis) {
+            while (!mOperatorStack.empty() && mOperatorStack.top() != cLeftParenthesis) {
                 generateNewNode();
             }
 
             // Pop left parenthesis
-            if (!operatorStack.empty()) {
-                operatorStack.pop();
+            if (!mOperatorStack.empty()) {
+                mOperatorStack.pop();
             }
-        } else if (isOperator(character)) {
-            while (!operatorStack.empty()
-                   && operatorPrecedence(character) >= operatorPrecedence(operatorStack.top())) {
-                generateNewNode();
-            }
-
-            operatorStack.push(character);
         }
     }
 
     // Generates new nodes until the operator stack is empty
-    while (!operatorStack.empty()) {
+    while (!mOperatorStack.empty()) {
         generateNewNode();
     }
 
-    // Print AST for debugging purposes
-    if (!valueStack.empty()) {
+#ifdef DEBUG_BUILD
+    if (!mValueStack.empty()) {
         std::cout << "Generated Abstract Syntax Tree\n";
-        AST::printAST(valueStack.top().get());
+        AST::printAST(mValueStack.top());
     }
+#endif
 }
