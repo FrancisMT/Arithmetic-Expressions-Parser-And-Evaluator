@@ -58,6 +58,7 @@ option(BUILD_DOCUMENTATION "Build documentation" ON)
 
 # Tests
 if (BUILD_TESTS)
+    find_package(GTest REQUIRED)
     enable_testing()
     include(CTest)
     add_subdirectory(tests)

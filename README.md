@@ -2,7 +2,7 @@
 A C++ program that can parse and evaluate arithmetic expressions
 
 
-## Challeng discription
+## Challenge description
 
 >Create a C++ program that can parse and evaluate arithmetic expressions.
 >Parsing and evaluating should be two independent steps that are separated
@@ -72,6 +72,18 @@ Arithmetic Expression Result: 22
 ```
 
 ## Coverage
+
+### Install GTest
+```shell
+sudo apt install libgtest-dev
+cd /usr/src/gtest
+sudo cmake CMakeLists.txt
+sudo make
+cd lib
+sudo cp *.a /usr/lib
+```
+
+### Run tests
 ```
 ❯ ctest
 Test project /home/Projects/Arithmetic-Expressions-Parser-And-Evaluator/cmake-build-debug
