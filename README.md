@@ -1,6 +1,50 @@
 # Arithmetic Expressions Parser And Evaluator
 A C++ program that can parse and evaluate arithmetic expressions
 
+
+## Challeng discription
+
+>Create a C++ program that can parse and evaluate arithmetic expressions.
+>Parsing and evaluating should be two independent steps that are separated
+>by a data structure, the abstract syntax tree (AST).
+>
+>The core program should not use anything apart from the C++17 STL.
+>Please also refrain from using regular expressions, they usually
+>complicate this specific task.
+>
+>Frameworks for building and testing can be used, though.
+>
+>Arithmetic expressions consist of decimal integers (to simplify,
+>only single-digit numbers from 0 to 9 are allowed as literals, i.e. neither
+>multi-digit nor fractional numbers are allowed as literals).
+>combined using the binary operators +, *, /, - and parentheses
+>and should respect the usual precedence relations.
+>
+>Since all tokens consist of single characters only, the parser
+>can be implemented without a tokenizer. Furthermore, a simple
+>top-down parser should be sufficient, implementing the shunting-yard
+>algorithm is not required (we assume that the machine stack is
+>large enough).
+>
+>The program should detect invalid input and report an error
+>(a case-specific error message or source location is not necessary).
+>
+>Evaluation should be performed on integers.
+>
+>Unit tests are appreciated. You can use a framework of you choice for that,
+>or no framework at all.
+>
+>Examples:
+>
+>On input `(4 + 5 * (7 - 3)) - 2`, the program should output `22`
+>
+>On input `4+5+7/2` it should output `12`.
+>
+>The input `10 + 1` is invalid (literal is too large)
+>
+>The input `-10` is invalid (either negative literal or unary minus)
+
+
 ## Tools
 * C++17
 * Cmake
