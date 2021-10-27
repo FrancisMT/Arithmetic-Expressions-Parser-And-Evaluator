@@ -2,7 +2,7 @@
 A C++ program that can parse and evaluate arithmetic expressions
 
 
-## Challeng discription
+## Challenge description
 
 >Create a C++ program that can parse and evaluate arithmetic expressions.
 >Parsing and evaluating should be two independent steps that are separated
