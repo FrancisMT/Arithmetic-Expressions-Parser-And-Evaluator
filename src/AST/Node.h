@@ -18,8 +18,8 @@ public:
      * @param rightNode Right child node
      */
     explicit Node(char nodeValue,
-                  std::shared_ptr<Node> leftNode = nullptr,
-                  std::shared_ptr<Node> rightNode = nullptr)
+                  std::unique_ptr<Node> leftNode = nullptr,
+                  std::unique_ptr<Node> rightNode = nullptr)
         : mNodeValue{nodeValue}
         , mLeftNode{std::move(leftNode)}
         , mRightNode{std::move(rightNode)}
@@ -39,9 +39,9 @@ public:
     /**
      * @brief Getter for the left child node
      *
-     * @return shared pointer to the left child node
+     * @return reference to the left child node pointer
      */
-    [[nodiscard]] std::shared_ptr<Node> getLeftNode() const
+    [[nodiscard]] const std::unique_ptr<Node>& getReferenceToLeftNodePointer() const
     {
         return mLeftNode;
     }
@@ -49,9 +49,9 @@ public:
     /**
      * @brief Getter for the right child node
      *
-     * @return shared pointer to the right child node
+     * @return reference to the right child node pointer
      */
-    [[nodiscard]] std::shared_ptr<Node> getRightNode() const
+    [[nodiscard]] const std::unique_ptr<Node>& getReferenceToRightNodePointer() const
     {
         return mRightNode;
     }
@@ -60,57 +60,60 @@ private:
     /// Value being held by the node
     char mNodeValue{};
     /// Left child node
-    std::shared_ptr<Node> mLeftNode{nullptr};
+    std::unique_ptr<Node> mLeftNode{nullptr};
     /// Right child node
-    std::shared_ptr<Node> mRightNode{nullptr};
+    std::unique_ptr<Node> mRightNode{nullptr};
 };
 
 /**
  * @brief Helper method used to count the total number of nodes inside an AST
  *
- * @param rootNode Root node of the AST
+ * @param rootNode Reference to the root node of the AST
  *
  * @return Number of nodes inside the AST
  */
-[[nodiscard]] inline uint32_t getNumberOfNodes(const Node* rootNode)
+[[nodiscard]] inline uint32_t getNumberOfNodes(const std::unique_ptr<Node>& rootNode)
 {
     return !rootNode ? 0
-                     : 1 + getNumberOfNodes(rootNode->getLeftNode().get())
-                             + getNumberOfNodes(rootNode->getRightNode().get());
+                     : 1 + getNumberOfNodes(rootNode->getReferenceToLeftNodePointer())
+                             + getNumberOfNodes(rootNode->getReferenceToRightNodePointer());
 }
 
 /**
  * @brief Helper method used to print (horizontally) the contents of an AST
  *
- * Recursive calls are made in order to print the content of every child rootNode's value
+ * Recursive calls are made in order to print the content of every node's value using preorder
+ * traversal
  *
- * @param rootNode Root node of the AST
+ * @param rootNode Reference to the root node of the AST
  * @param prefix helper string used to beautify the outputted data
  */
-inline void printAST(const Node* rootNode, std::string&& prefix = "")
+inline void printAST(const std::unique_ptr<Node>& rootNode, std::string&& prefix = "")
 {
     if (rootNode) {
         std::cout << prefix << rootNode->getNodeValue() << "\n";
-        printAST(rootNode->getLeftNode().get(), prefix + "    ");
-        printAST(rootNode->getRightNode().get(), prefix + "    ");
+        printAST(rootNode->getReferenceToLeftNodePointer(), prefix + "    ");
+        printAST(rootNode->getReferenceToRightNodePointer(), prefix + "    ");
     }
 }
 
 /**
  * @brief Helper method used to compare two ASTs
  *
- * @param rootNodeA Root node of the first AST
- * @param rootNodeB Root node of the second AST
+ * @param rootNodeA Reference to the root node of the first AST
+ * @param rootNodeB Reference to the root node of the second AST
  *
  * @return Boolean containing the comparison result
  */
-[[nodiscard]] inline bool areASTsIdentical(const Node* rootNodeA, const Node* rootNodeB)
+[[nodiscard]] inline bool areASTsIdentical(const std::unique_ptr<Node>& rootNodeA,
+                                           const std::unique_ptr<Node>& rootNodeB)
 {
     return (!rootNodeA && !rootNodeB)
            || ((rootNodeA && rootNodeB) && (rootNodeA->getNodeValue() == rootNodeB->getNodeValue())
-               && areASTsIdentical(rootNodeA->getLeftNode().get(), rootNodeB->getLeftNode().get())
-               && areASTsIdentical(rootNodeA->getRightNode().get(),
-                                   rootNodeB->getRightNode().get()));
+               && areASTsIdentical(rootNodeA->getReferenceToLeftNodePointer(),
+                                   rootNodeB->getReferenceToLeftNodePointer())
+               && areASTsIdentical(rootNodeA->getReferenceToRightNodePointer(),
+                                   rootNodeB->getReferenceToRightNodePointer()));
 }
 
 } // namespace AST

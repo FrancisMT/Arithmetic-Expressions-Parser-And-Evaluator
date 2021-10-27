@@ -121,7 +121,7 @@ TEST_F(ParserUnitTest, parserGenerasteAST)
     Parser parser("5+(1*2)");
     ASSERT_NO_THROW(parser.execute());
     ASSERT_NE(parser.getAST(), nullptr);
-    ASSERT_EQ(AST::getNumberOfNodes(parser.getAST().get()), 5);
+    ASSERT_EQ(AST::getNumberOfNodes(parser.getAST()), 5);
 
     using namespace AST;
     const auto rootNode
@@ -131,5 +131,5 @@ TEST_F(ParserUnitTest, parserGenerasteAST)
                                                           std::make_unique<Node>('1'),
                                                           std::make_unique<Node>('2')));
 
-    ASSERT_TRUE(areASTsIdentical(rootNode.get(), parser.getAST().get()));
+    ASSERT_TRUE(areASTsIdentical(rootNode, parser.getAST()));
 }

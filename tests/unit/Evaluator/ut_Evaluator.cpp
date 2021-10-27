@@ -19,19 +19,19 @@ TEST(EvaluatorUnitTest, evaluatorOutputsCorrectResult)
 {
     // Generating valid AST for the arithmetic expression: "4+5+7/2"
     using namespace AST;
-    const auto rootNode = std::make_shared<Node>(
+    const auto rootNode = std::make_unique<Node>(
           // First Level
           '+',
           // Second Level
-          std::make_shared<Node>('+',
+          std::make_unique<Node>('+',
                                  // Third Level
-                                 std::make_shared<Node>('4'),
-                                 std::make_shared<Node>('5')),
+                                 std::make_unique<Node>('4'),
+                                 std::make_unique<Node>('5')),
           // Second Level
-          std::make_shared<Node>('/',
+          std::make_unique<Node>('/',
                                  // Third Level
-                                 std::make_shared<Node>('7'),
-                                 std::make_shared<Node>('2')));
+                                 std::make_unique<Node>('7'),
+                                 std::make_unique<Node>('2')));
 
     Evaluator evaluator(rootNode);
     ASSERT_NO_THROW(evaluator.execute());

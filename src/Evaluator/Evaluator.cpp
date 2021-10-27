@@ -30,8 +30,8 @@ constexpr auto performArithmeticOperation(char operation, float leftOperand, flo
 }
 } // namespace
 
-Evaluator::Evaluator(std::shared_ptr<AST::Node> astRootNode)
-    : mAstRootNode{std::move(astRootNode)}
+Evaluator::Evaluator(const std::unique_ptr<AST::Node>& astRootNode)
+    : mAstRootNode{astRootNode}
 {
 }
 
@@ -44,15 +44,16 @@ int32_t Evaluator::execute()
     return static_cast<int32_t>(analyseAndTraverseASTNode(mAstRootNode));
 }
 
-float Evaluator::analyseAndTraverseASTNode(const std::shared_ptr<AST::Node>& node)
+float Evaluator::analyseAndTraverseASTNode(const std::unique_ptr<AST::Node>& node)
 {
     const auto nodeValue = node->getNodeValue();
 
     if (std::isdigit(nodeValue)) {
         return static_cast<float>(nodeValue - '0');
     } else {
-        const auto leftNodeValue = analyseAndTraverseASTNode(node->getLeftNode());
-        const auto rightNodeValue = analyseAndTraverseASTNode(node->getRightNode());
+        const auto leftNodeValue = analyseAndTraverseASTNode(node->getReferenceToLeftNodePointer());
+        const auto rightNodeValue
+              = analyseAndTraverseASTNode(node->getReferenceToRightNodePointer());
 
         return performArithmeticOperation(nodeValue, leftNodeValue, rightNodeValue);
     }

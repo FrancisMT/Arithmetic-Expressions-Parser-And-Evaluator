@@ -10,12 +10,12 @@ TEST(ArithmeticExpressionsHandlingTest, outputsTheCorrectResultOfArithmeticExpre
 {
 
     const auto expressionsAndResultsList = {std::pair{"(4 + 5 * (7 - 3)) - 2", 22},
-                                           std::pair{"4+5+7/2", 12},
-                                           std::pair{"2+3*(1-2)", -1},
-                                           std::pair{"5+(1*2)", 7},
-                                           std::pair{"2+3* 1 - 2", 3},
-                                           std::pair{"7+3*(1/(2/(3+1)-1))", 1},
-                                           std::pair{"(2*(3+6/2)/4)", 3}};
+                                            std::pair{"4+5+7/2", 12},
+                                            std::pair{"2+3*(1-2)", -1},
+                                            std::pair{"5+(1*2)", 7},
+                                            std::pair{"2+3* 1 - 2", 3},
+                                            std::pair{"7+3*(1/(2/(3+1)-1))", 1},
+                                            std::pair{"(2*(3+6/2)/4)", 3}};
 
     for (const auto& [arithmeticExpressions, expectedResult] : expressionsAndResultsList) {
         Parser parser(arithmeticExpressions);

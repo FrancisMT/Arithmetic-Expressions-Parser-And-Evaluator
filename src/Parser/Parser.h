@@ -27,9 +27,9 @@ public:
     /**
      * @brief Getter for the generated AST
      *
-     * @return shared pointer to the root node of the generated AST
+     * @return Reference to the root node of the generated AST
      */
-    std::shared_ptr<AST::Node> getAST();
+    [[nodiscard]] const std::unique_ptr<AST::Node>& getAST() const;
 
 private:
     /**
@@ -39,6 +39,8 @@ private:
 
     /**
      * @brief Helper method used to parse an arithmetic expression into an AST
+     *
+     * The AST is created using the Shunting Yard algorithm
      */
     void createAST();
 
@@ -46,7 +48,7 @@ private:
     /// String containing the input of the parser
     std::string mInputString;
     /// LIFO container used to handle the operators of an arithmetic expression
-    std::stack<char> operatorStack;
+    std::stack<char> mOperatorStack;
     /// LIFO container used to handle the operands of an arithmetic expression
-    std::stack<std::shared_ptr<AST::Node>> valueStack;
+    std::stack<std::unique_ptr<AST::Node>> mValueStack;
 };
