@@ -1,4 +1,7 @@
-# Project setup ---------------------------------------------------------------
+################################################################################
+## Project setup ###############################################################
+################################################################################
+
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(Arithmetic-Expressions-Parser-Evaluator LANGUAGES CXX)
 
@@ -7,8 +10,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use GNU extension (like -std=gnu++11) for portability
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-## Dependencies
+################################################################################
+## Fetch External Libraries ####################################################
+################################################################################
+
 include(FetchContent)
+
+## Google Test #################################################################
 FetchContent_Declare(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest.git
@@ -16,7 +24,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-## Compile flags
+################################################################################
+## Compile flags ###############################################################
+################################################################################
+
 add_compile_options(
         -pedantic
         -pedantic-errors
@@ -43,7 +54,7 @@ add_compile_options(
         -Wunused-parameter
 )
 
-## Options supported by GNU
+## Options supported by GNU ####################################################
 if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     add_compile_options(
             -Walloc-zero
@@ -57,23 +68,32 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     )
 endif ()
 
-
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_compile_definitions(DEBUG_BUILD)
 endif()
 
-# Build options ---------------------------------------------------------------
+################################################################################
+## Build options ###############################################################
+################################################################################
+
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DOCUMENTATION "Build documentation" ON)
 
-## Tests
+################################################################################
+## Tests #######################################################################
+################################################################################
+
 if (BUILD_TESTS)
     enable_testing()
     include(GoogleTest)
     add_subdirectory(tests)
 endif ()
 
-## Documentation
+
+################################################################################
+## Generate Documentation ######################################################
+################################################################################
+
 if (BUILD_DOCUMENTATION)
     find_package(Doxygen)
     if (DOXYGEN_FOUND)
@@ -94,10 +114,17 @@ if (BUILD_DOCUMENTATION)
     endif (DOXYGEN_FOUND)
 endif ()
 
-# Build -----------------------------------------------------------------------
+
+################################################################################
+## Build #######################################################################
+################################################################################
+
 add_subdirectory(src)
 
-# Status ----------------------------------------------------------------------
+################################################################################
+## Status ######################################################################
+################################################################################
+
 message(STATUS)
 message(STATUS "${PROJECT_NAME} Configuration:")
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")

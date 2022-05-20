@@ -50,6 +50,13 @@ A C++ program that can parse and evaluate arithmetic expressions
 * Cmake
 * GTest
 
+## Build
+```
+❯ mkdir build && cd build
+❯ cmake ..
+❯ cmake --build . --config debug
+```
+
 ## Usage
 ```
 ❯ ./Arithmetic-Expressions-Parser-Evaluator

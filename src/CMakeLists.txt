@@ -4,6 +4,8 @@ include_directories(./)
 add_subdirectory(Parser)
 add_subdirectory(Evaluator)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 add_executable(${PROJECT_NAME}
     main.cpp
 )
