@@ -1,3 +1,3 @@
 add_executable(it_ArithmeticExpressionsHandling it_ArithmeticExpressionsHandling.cpp)
-target_link_libraries(it_ArithmeticExpressionsHandling parser evaluator GTest::GTest GTest::Main)
+target_link_libraries(it_ArithmeticExpressionsHandling parser evaluator gtest_main)
 gtest_discover_tests(it_ArithmeticExpressionsHandling)

@@ -7,6 +7,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use GNU extension (like -std=gnu++11) for portability
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+## Dependencies
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        e2239ee6043f73722e7aa812a459f54a28552929 # release-1.11.0
+)
+FetchContent_MakeAvailable(googletest)
+
+## Compile flags
 add_compile_options(
         -pedantic
         -pedantic-errors
@@ -33,7 +43,7 @@ add_compile_options(
         -Wunused-parameter
 )
 
-# Add options supported by GNU
+## Options supported by GNU
 if (CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     add_compile_options(
             -Walloc-zero
@@ -56,15 +66,14 @@ endif()
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DOCUMENTATION "Build documentation" ON)
 
-# Tests
+## Tests
 if (BUILD_TESTS)
-    find_package(GTest REQUIRED)
     enable_testing()
-    include(CTest)
+    include(GoogleTest)
     add_subdirectory(tests)
 endif ()
 
-# Documentation
+## Documentation
 if (BUILD_DOCUMENTATION)
     find_package(Doxygen)
     if (DOXYGEN_FOUND)
