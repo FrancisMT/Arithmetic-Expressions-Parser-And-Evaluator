@@ -2,8 +2,10 @@
 *build*
 
 # IDE metadata files
-.vscode
+.vs/
+.vscode/
 .idea/
+CMakeSettings.json
 
 # Prerequisites
 *.d
