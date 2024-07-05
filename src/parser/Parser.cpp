@@ -1,12 +1,16 @@
-#include "Parser.h"
+#include "Parser.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <ranges>
 #include <utility>
-#include <unordered_set>
+#include <vector>
 
-#include "AST/Node.h"
-#include "MathUtils/Constants.h"
+#include "ast/Node.h"
+#include "mathUtils/Constants.hpp"
+
+#include <unordered_set>
 
 namespace {
 using namespace MathUtils::Constants;
@@ -110,6 +114,26 @@ constexpr uint8_t operatorPrecedence(char operation)
         return 0;
     }
 }
+
+std::vector<std::string> splitString(const std::string& stringToSplit, const char splitChar)
+{
+    std::vector<std::string> output;
+    for (const auto& splitValue : stringToSplit | std::ranges::views::split(splitChar)) {
+        output.emplace_back(splitValue.begin(), splitValue.end());
+    }
+
+    return output;
+}
+
+void removeWhiteSpacesFromString(std::string& stringToTrim)
+{
+    stringToTrim.erase(
+          std::remove_if(stringToTrim.begin(),
+                         stringToTrim.end(),
+                         [](unsigned char stringChar) { return std::isspace(stringChar); }),
+          stringToTrim.end());
+}
+
 } // namespace
 
 Parser::Parser(const std::string& inputToParse)
@@ -117,46 +141,88 @@ Parser::Parser(const std::string& inputToParse)
 {
 }
 
-void Parser::execute()
+bool Parser::execute()
 {
-    validateInput();
-    createAST();
+    removeWhiteSpacesFromString(mInputString);
+
+    const auto inputStringTokens = splitString(mInputString, MathUtils::Constants::cAssignOp);
+
+#ifdef DEBUG_BUILD
+    std::cout << "\nInput String tokens:\n";
+    for (const auto& stringToken : inputStringTokens) {
+        std::cout << stringToken << "\n";
+    }
+#endif
+
+    if (inputStringTokens.size() != 2) {
+        std::cout << "Invalid arithmetic operation provided.";
+        return false;
+    }
+
+    mLHSString = inputStringTokens.front();
+    mRHSString = inputStringTokens.back();
+
+    return parseLHS() && parseRHS();
 }
 
-const std::unique_ptr<AST::Node>& Parser::getAST() const
+[[nodiscard]] std::string Parser::getOperandOfLHS() const
 {
-    return mValueStack.top();
+    return mLHSString;
 }
 
-void Parser::validateInput()
+const std::unique_ptr<AST::Node>& Parser::getASTOfRHS() const
 {
-    std::cout << "Validating input string: " << mInputString << "\n";
+    return mRHSValueStack.top();
+}
 
-    if (mInputString.empty()) {
-        throw std::invalid_argument("Empty expression provided");
+bool Parser::parseLHS()
+{
+    // TODO[FM]: Add support for a more complex parsing.
+    // Ideally we would also create an AST for the LHS but for now,
+    // we only support LHS values with a single letter operands (e.g. "x=2+2").
+    if (mLHSString.size() != 1) {
+        return false;
+    }
+
+    return true;
+}
+
+bool Parser::parseRHS()
+{
+    return validateRHS() && createASTforRHS();
+}
+
+bool Parser::validateRHS()
+{
+    std::cout << "Validating input string: " << mRHSString << "\n";
+
+    if (mRHSString.empty()) {
+        std::cout << "Empty expression provided" << "\n";
+        return false;
     }
 
     // String will be wrapped around parenthesis for easier parsing
     std::string validatedString{cLeftParenthesis};
-    validatedString.reserve(mInputString.size());
+    validatedString.reserve(mRHSString.size());
 
     uint8_t leftParenthesisCounter{0};
     uint8_t rightParenthesisCounter{0};
 
-    for (const auto& character : mInputString) {
+    for (const auto& character : mRHSString) {
 
         const auto& previousValidCharacter = validatedString.back();
 
-        // Trim input string
-        if (character == cSpaceChar) {
-            continue;
-        }
+        // // Trim input string
+        // if (character == cSpaceChar) {
+        //     continue;
+        // }
         // Check digits validity
-        else if (isSingleDigitInteger(previousValidCharacter, character)) {
+        /* else */ if (isSingleDigitInteger(previousValidCharacter, character)) {
 
             // Right parenthesis should not be followed by a digit
             if (previousValidCharacter == cRightParenthesis) {
-                throw std::invalid_argument("Invalid expression provided");
+                std::cout << "Invalid expression provided" << "\n";
+                return false;
             }
         }
         // Check operators validity
@@ -164,12 +230,14 @@ void Parser::validateInput()
 
             // Check if the operator is used as a unary minus
             if (isUnaryMinus(previousValidCharacter, character)) {
-                throw std::invalid_argument("Negative value provided");
+                std::cout << "Negative values are not currently supported" << "\n";
+                return false;
             }
 
             // Check if the operator syntax is correct
             if (isOperator(previousValidCharacter) || previousValidCharacter == cLeftParenthesis) {
-                throw std::invalid_argument("Invalid expression provided");
+                std::cout << "Invalid expression provided" << "\n";
+                return false;
             }
         }
         // Check parenthesis validity
@@ -184,10 +252,14 @@ void Parser::validateInput()
 
             // Left parenthesis should not be preceded by a digit
             if (character == cLeftParenthesis && std::isdigit(previousValidCharacter)) {
-                throw std::invalid_argument("Invalid expression provided");
+                std::cout << "Invalid expression provided" << "\n";
+                return false;
             }
-        } else {
-            throw std::invalid_argument("Invalid character used");
+        }
+        // Account for single character variables
+        else if (!std::isalpha(character)) {
+            std::cout << "Invalid expression provided" << "\n";
+            return false;
         }
 
         validatedString.push_back(character);
@@ -195,80 +267,87 @@ void Parser::validateInput()
 
     // Validate the amount of parenthesis pairs
     if (leftParenthesisCounter != rightParenthesisCounter) {
-        throw std::invalid_argument("Parenthesis do not match");
+        std::cout << "Parenthesis do not match" << "\n";
+        return false;
     }
 
     // Validate that the expression does not end with an operator
     if (isOperator(validatedString.back())) {
-        throw std::invalid_argument("Invalid expression provided");
+        std::cout << "Invalid expression provided" << "\n";
+        return false;
     }
 
     validatedString.append(1, cRightParenthesis);
-    mInputString.swap(validatedString);
-    mInputString.shrink_to_fit();
-    std::cout << "Validated String: " << mInputString << "\n";
+    mRHSString.swap(validatedString);
+    mRHSString.shrink_to_fit();
+    std::cout << "Validated String: " << mRHSString << "\n";
+
+    return true;
 }
 
-void Parser::createAST()
+bool Parser::createASTforRHS()
 {
     std::cout << "Generating Abstract Syntax Tree\n";
 
     const auto generateNewNode = [this]() {
-        if (!mOperatorStack.empty() && !mValueStack.empty()) {
+        if (!mRHSOperatorStack.empty() && !mRHSValueStack.empty()) {
 
-            const auto operation = mOperatorStack.top();
-            mOperatorStack.pop();
+            const auto operation = mRHSOperatorStack.top();
+            mRHSOperatorStack.pop();
 
-            auto rightValue = std::move(mValueStack.top());
-            mValueStack.pop();
+            auto rightValue = std::move(mRHSValueStack.top());
+            mRHSValueStack.pop();
 
-            auto leftValue = std::move(mValueStack.top());
-            mValueStack.pop();
+            auto leftValue = std::move(mRHSValueStack.top());
+            mRHSValueStack.pop();
 
-            mValueStack.emplace(std::make_unique<AST::Node>(
+            mRHSValueStack.emplace(std::make_unique<AST::Node>(
                   operation, std::move(leftValue), std::move(rightValue)));
         }
     };
 
     // Analyse input
-    for (const auto& character : mInputString) {
+    for (const auto& character : mRHSString) {
 
-        if (std::isdigit(character)) {
-            mValueStack.emplace(std::make_unique<AST::Node>(character));
+        // Account for the possibility that we might have a variable in the provided string.
+        if (std::isdigit(character) || std::isalpha(character)) {
+            mRHSValueStack.emplace(std::make_unique<AST::Node>(character));
 
         } else if (isOperator(character)) {
-            while (!mOperatorStack.empty()
-                   && operatorPrecedence(mOperatorStack.top()) >= operatorPrecedence(character)) {
+            while (!mRHSOperatorStack.empty()
+                   && operatorPrecedence(mRHSOperatorStack.top())
+                            >= operatorPrecedence(character)) {
                 generateNewNode();
             }
 
-            mOperatorStack.push(character);
+            mRHSOperatorStack.push(character);
 
         } else if (character == cLeftParenthesis) {
-            mOperatorStack.push(character);
-
+            mRHSOperatorStack.push(character);
 
         } else if (character == cRightParenthesis) {
-            while (!mOperatorStack.empty() && mOperatorStack.top() != cLeftParenthesis) {
+            while (!mRHSOperatorStack.empty() && mRHSOperatorStack.top() != cLeftParenthesis) {
                 generateNewNode();
             }
 
             // Pop left parenthesis
-            if (!mOperatorStack.empty()) {
-                mOperatorStack.pop();
+            if (!mRHSOperatorStack.empty()) {
+                mRHSOperatorStack.pop();
             }
         }
     }
 
     // Generates new nodes until the operator stack is empty
-    while (!mOperatorStack.empty()) {
+    while (!mRHSOperatorStack.empty()) {
         generateNewNode();
     }
 
 #ifdef DEBUG_BUILD
-    if (!mValueStack.empty()) {
+    if (!mRHSValueStack.empty()) {
         std::cout << "Generated Abstract Syntax Tree\n";
-        AST::printAST(mValueStack.top());
+        AST::printAST(mRHSValueStack.top());
     }
 #endif
+
+    return true;
 }

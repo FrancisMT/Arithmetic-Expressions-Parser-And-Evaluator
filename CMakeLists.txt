@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(Arithmetic-Expressions-Parser-Evaluator LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Don't use GNU extension (like -std=gnu++11) for portability
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -76,8 +76,8 @@ endif()
 ## Build options ###############################################################
 ################################################################################
 
-option(BUILD_TESTS "Build tests" ON)
-option(BUILD_DOCUMENTATION "Build documentation" ON)
+option(BUILD_TESTS "Build tests" OFF)
+option(BUILD_DOCUMENTATION "Build documentation" OFF)
 
 ################################################################################
 ## Tests #######################################################################

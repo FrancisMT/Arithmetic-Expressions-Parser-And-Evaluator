@@ -1,8 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
-#include "AST/Node.h"
+#include "ast/Node.h"
+
+#include <unordered_map>
+#include <unordered_set>
 
 /**
  * @brief Class responsible for evaluating arithmetic expressions contained in an AST
@@ -17,14 +21,19 @@ public:
      *
      * @param astRootNode Reference to the toot node of an Abstract Syntax Tree (AST)
      */
-    explicit Evaluator(const std::unique_ptr<AST::Node>& astRootNode);
+    explicit Evaluator(const std::unique_ptr<AST::Node>& astRootNode,
+                       const std::unordered_map<std::string, int>& operandLookupMap);
 
     /**
      * @brief Evaluates an arithmetic expression held by the AST and outputs a result
      *
+     * @param[out] dependencies
+     *
      * @return Result of the arithmetic expression
      */
-    int32_t execute();
+    [[nodiscard]] std::optional<uint32_t> execute();
+
+    [[nodiscard]] const std::unordered_set<std::string>& getASTDependencies() const;
 
 private:
     /**
@@ -34,9 +43,12 @@ private:
      *
      * @return Final value of the node
      */
-    float analyseAndTraverseASTNode(const std::unique_ptr<AST::Node>& node);
+    [[nodiscard]] float analyseAndTraverseASTNode(const std::unique_ptr<AST::Node>& node);
 
 private:
     /// Reference to an Abstract syntax tree root node
     const std::unique_ptr<AST::Node>& mAstRootNode;
+
+    const std::unordered_map<std::string, int>& mOperandLookupMap;
+    std::unordered_set<std::string> mDependencies;
 };
