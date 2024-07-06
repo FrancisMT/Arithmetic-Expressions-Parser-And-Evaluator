@@ -52,33 +52,25 @@ Evaluator::Evaluator(const std::unique_ptr<AST::Node>& astRootNode,
 {
 }
 
-std::optional<uint32_t> Evaluator::execute()
+Evaluator::Result Evaluator::execute()
 {
     if (!mAstRootNode) {
         std::cout << "Empty AST";
         return {};
     }
 
-    const auto result = static_cast<int32_t>(analyseAndTraverseASTNode(mAstRootNode));
+    const auto expressionValue = static_cast<int32_t>(analyseAndTraverseASTNode(mAstRootNode));
 
-    // The result is irrelevant dependencies were found the AST evaluation.
     if (!mDependencies.empty()) {
-        return {};
+        return mDependencies;
     }
 
-    return result;
-}
-
-const std::unordered_set<std::string>& Evaluator::getASTDependencies() const
-{
-    return mDependencies;
+    return expressionValue;
 }
 
 float Evaluator::analyseAndTraverseASTNode(const std::unique_ptr<AST::Node>& node)
 {
     const auto nodeValue = node->getNodeValue();
-
-    std::cout << "\nnodeValue=" << nodeValue << "\n";
 
     std::unordered_set<char> variableDependencies;
 
@@ -97,15 +89,13 @@ float Evaluator::analyseAndTraverseASTNode(const std::unique_ptr<AST::Node>& nod
             return static_cast<float>(mOperandLookupMap.at(nodeValueString));
         }
 
-        std::cout << "\n Node value is a variable: " << nodeValue << "\n";
         mDependencies.insert({nodeValue});
+
+        // TODO: I need to continue to traverse the AST!!!!!!!!
     } else {
         const auto leftNodeValue = analyseAndTraverseASTNode(node->getReferenceToLeftNodePointer());
         const auto rightNodeValue
               = analyseAndTraverseASTNode(node->getReferenceToRightNodePointer());
-
-        std::cout << "leftNodeValue" << leftNodeValue << "\n";
-        std::cout << "rightNodeValue" << rightNodeValue << "\n";
 
         return performArithmeticOperation(nodeValue, leftNodeValue, rightNodeValue);
     }

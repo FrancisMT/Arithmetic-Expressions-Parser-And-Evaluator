@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <optional>
+#include <variant>
 
 #include "ast/Node.h"
 
@@ -16,6 +17,8 @@
 class Evaluator
 {
 public:
+    using Result = std::variant<int, std::unordered_set<std::string>>;
+
     /**
      * @brief Class constructor
      *
@@ -27,13 +30,11 @@ public:
     /**
      * @brief Evaluates an arithmetic expression held by the AST and outputs a result
      *
-     * @param[out] dependencies
+     * @param[out]
      *
      * @return Result of the arithmetic expression
      */
-    [[nodiscard]] std::optional<uint32_t> execute();
-
-    [[nodiscard]] const std::unordered_set<std::string>& getASTDependencies() const;
+    [[nodiscard]] Result execute();
 
 private:
     /**
@@ -50,5 +51,6 @@ private:
     const std::unique_ptr<AST::Node>& mAstRootNode;
 
     const std::unordered_map<std::string, int>& mOperandLookupMap;
+
     std::unordered_set<std::string> mDependencies;
 };

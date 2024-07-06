@@ -58,6 +58,9 @@ private:
 
     /// LIFO container used to handle the operators of the RHS arithmetic expression
     std::stack<char> mRHSOperatorStack;
+
+
+    // TODO: Make this a struct.
     /// LIFO container used to handle the operands of the RHS arithmetic expression
     std::stack<std::unique_ptr<AST::Node>> mRHSValueStack;
 };
