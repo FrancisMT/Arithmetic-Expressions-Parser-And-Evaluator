@@ -155,7 +155,6 @@ bool Parser::execute()
 #endif
 
     if (inputStringTokens.size() != 2) {
-        std::cout << "Invalid arithmetic operation provided.";
         return false;
     }
 

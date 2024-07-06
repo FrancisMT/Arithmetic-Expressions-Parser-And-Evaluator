@@ -1,6 +1,9 @@
 #include "State.hpp"
 
+#include <functional>
+
 #include "evaluator/Evaluator.hpp"
+#include "mathUtils/Methods.hpp"
 
 namespace Calculator {
 
@@ -12,40 +15,70 @@ void State::updateOperationOrder(const std::string& operand)
 {
     mOperandOrderStack.push(operand);
 }
-
 std::vector<std::pair<std::string, int>>
       State::storeExpressionValue(const std::string& operand, const int value)
 {
+    std::vector<std::pair<std::string, int>> affectedValues;
 
-    mOperandValuesMap.insert_or_assign(operand, value);
+    // Helper function to handle the recursive logic
+    std::function<void(const std::string&, int)> storeValueAndCheckDependencies =
 
-    std::vector<std::pair<std::string, int>> affectedValues{{operand, value}};
+          [&](const std::string& newOperand, int newValue) {
+              mOperandValuesMap.insert_or_assign(newOperand, newValue);
 
-    // TODO: This needs to be recursive!!!! -> a=b-2 || b = c + 8 || c = 2+2
+              //   TODO: Check how to fix cyclic dependencies: the following is not working.
+              //   if (mOperandValuesMap.insert_or_assign(newOperand, newValue).second) {
+              //       // They key "newOperand" didn't  exist in the map: delete a possible
+              //       expression
+              //       // with dependencies.
+              //     //   if (mExpressionsWithDependenciesMap.contains(newOperand)) {
+              //     //       mExpressionsWithDependenciesMap.erase(newOperand);
+              //     //   }
 
-    // Check if we can calculate the value of operands
-    // that depend on the value of the one that was just stored.
-    const auto operandDependencyRange = mOperandDependenciesMap.equal_range(operand);
-    for (auto itr = operandDependencyRange.first; itr != operandDependencyRange.second; ++itr) {
+              //       // This probably means that the we are being requested a value
+              //       override.
+              //       // Furthermore, we need to take into account cyclic dependencies:
+              //       // What happens if we end-up with the following operation order?
+              //       // -> 1. a = b | 2. b = a | 3. a = 1
+              //       // To account for this, we do a "surgical override" and check
+              //       // if the operand is currently assigned to an expression that
+              //       // depends on another operand, and then remove it.
 
-        const auto dependantOperand = itr->second;
+              //       // If the newOperand (that has a value assigned to it),
+              //       // had previously an expression with dependencies assigned,
+              //       // delete the expression. This will avoid cyclic dependencies.
+              //       // (e.g. 1. a = b | 2. b = a | 3. c = a+b | 4.a = )
 
-        if (mExpressionsWithDependenciesMap.contains(dependantOperand)) {
+              //       //   MathUtils::Methods::removeEntryWithValue(mOperandDependenciesMap,
+              //       //   newOperand);
+              //   }
 
-            // AST::printAST(mExpressionsWithDependenciesMap.at(dependantOperand).getASTOfRHS());
-            Evaluator evaluator(mExpressionsWithDependenciesMap.at(dependantOperand).getASTOfRHS(),
-                                mOperandValuesMap);
-            const auto evaluatorResult = evaluator.execute();
+              affectedValues.emplace_back(newOperand, newValue);
 
-            if (std::holds_alternative<int>(evaluatorResult)) {
+              const auto operandDependencyRange = mOperandDependenciesMap.equal_range(newOperand);
 
-                const auto dependantOperandResult = std::get<int>(evaluatorResult);
-                mOperandValuesMap.insert_or_assign(dependantOperand, dependantOperandResult);
+              for (auto itr = operandDependencyRange.first; itr != operandDependencyRange.second;
+                   ++itr) {
 
-                affectedValues.emplace_back(dependantOperand, dependantOperandResult);
-            }
-        }
-    }
+                  const auto dependantOperand = itr->second;
+
+                  if (mExpressionsWithDependenciesMap.contains(dependantOperand)) {
+
+                      Evaluator evaluator(
+                            mExpressionsWithDependenciesMap.at(dependantOperand).getASTOfRHS(),
+                            mOperandValuesMap);
+                      const auto evaluatorResult = evaluator.execute();
+
+                      if (std::holds_alternative<int>(evaluatorResult)) {
+                          const auto dependantOperandResult = std::get<int>(evaluatorResult);
+                          storeValueAndCheckDependencies(dependantOperand, dependantOperandResult);
+                      }
+                  }
+              }
+          };
+
+    // Initial call to start the recursive dependencies checking.
+    storeValueAndCheckDependencies(operand, value);
 
     return affectedValues;
 }

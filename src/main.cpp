@@ -7,7 +7,7 @@
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     const auto getUserInputString = [] {
-        std::cout << "Input Arithmetic expression to evaluate: ";
+        std::cout << "\nInput Arithmetic expression to evaluate: ";
         std::string input;
         std::getline(std::cin, input);
 

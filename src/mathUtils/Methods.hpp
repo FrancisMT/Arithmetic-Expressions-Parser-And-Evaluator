@@ -28,4 +28,18 @@ inline constexpr void removeWhiteSpacesFromString(std::string& stringToTrim)
           stringToTrim.end());
 }
 
+template<class MapType>
+inline void removeEntryWithValue(MapType& map, const typename MapType::mapped_type& value)
+{
+    for (auto itr = map.begin(); itr != map.end();) {
+        if (itr->second == value) {
+            // Delete current entry and get the next one.
+            itr = map.erase(itr);
+        } else {
+            // Nothing to see here: move onto the next entry.
+            ++itr;
+        }
+    }
+}
+
 } // namespace MathUtils::Methods
