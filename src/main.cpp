@@ -6,6 +6,8 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
+    Calculator::Runner calculator;
+    
     // const auto getUserInputString = [] {
     //     std::cout << "\nInput Arithmetic expression to evaluate: ";
     //     std::string input;
@@ -14,9 +16,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     //     return input;
     // };
 
-    Calculator::Runner calculator;
     // while (true) {
-    //     calculator.processInstruction(getUserInputString());
+    //     const auto operationResults = calculator.processInstruction(getUserInputString());
+
+    //     for (auto itr = operationResults.cbegin(); itr != operationResults.cend();) {
+    //         std::cout << *itr;
+    //         ++itr;
+    //         std::cout << (itr != operationResults.cend() ? ", " : "\n");
+    //     }
     // }
 
     for (const auto& input : {"a=2+3",
@@ -30,7 +37,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
                               "f=g*7",
                               "result",
                               "g=3*2"}) {
-        calculator.processInstruction(input);
+
+        const auto operationResults = calculator.processInstruction(input);
+
+        for (auto itr = operationResults.cbegin(); itr != operationResults.cend();) {
+            std::cout << *itr;
+            ++itr;
+            std::cout << (itr != operationResults.cend() ? ", " : "\n");
+        }
     }
 
     return 0;

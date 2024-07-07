@@ -12,7 +12,7 @@ public:
     Runner();
     ~Runner();
 
-    void processInstruction(const std::string& input);
+    std::vector<std::string> processInstruction(const std::string& input);
 
 private:
     State mState;

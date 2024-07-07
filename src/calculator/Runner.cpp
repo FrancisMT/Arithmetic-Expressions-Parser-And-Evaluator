@@ -27,9 +27,15 @@ std::pair<SupportedOperation, std::optional<int>> getOperationRequest(const std:
         return {SupportedOperation::RESULT, {}};
     } else if (inputStringTokens.size() == 2 && inputStringTokens.front() == cUndoCommand) {
 
-        const auto undoOperationCount = std::stoi(inputStringTokens.back());
+        int result{};
+        try {
+            result = std::stoi(inputStringTokens.back());
+        }
+        catch (const std::exception& e) {
+            result = -1;
+        }
 
-        return {SupportedOperation::UNDO, undoOperationCount};
+        return {SupportedOperation::UNDO, result};
     }
 
     return {SupportedOperation::OTHER, {}};
@@ -43,8 +49,10 @@ Runner::Runner() {}
 
 Runner::~Runner() {}
 
-void Runner::processInstruction(const std::string& input)
+std::vector<std::string> Runner::processInstruction(const std::string& input)
 {
+    std::vector<std::string> results;
+
     // Handle situations where the user provided a supported instructions
     // instead of an arithmetic expression.
     {
@@ -57,10 +65,11 @@ void Runner::processInstruction(const std::string& input)
             if (lastOperation == decltype(lastOperation)()) {
                 std::cout << "There is no result available yet\n";
             } else {
-                std::cout << "return " << lastOperation.first << " = " << lastOperation.second
-                          << "\n";
+                results.emplace_back("return " + lastOperation.first + " = "
+                                     + std::to_string(lastOperation.second));
             }
-            return;
+
+            return results;
         }
         case SupportedOperation::UNDO: {
             const auto undoneOperations = mState.undoLastRegisteredOperations(
@@ -68,14 +77,13 @@ void Runner::processInstruction(const std::string& input)
 
             if (undoneOperations.empty()) {
                 std::cout << "No operations were undone\n";
-                return;
+            } else {
+                for (const auto& undoneOperation : undoneOperations) {
+                    results.emplace_back("delete " + undoneOperation);
+                }
             }
 
-            for (const auto& undoneOperation : undoneOperations) {
-                std::cout << "delete " << undoneOperation << "\n";
-            }
-
-            return;
+            return results;
         }
         case SupportedOperation::OTHER:
         default:
@@ -87,7 +95,7 @@ void Runner::processInstruction(const std::string& input)
     Parser expressionParser(input);
     if (!expressionParser.execute()) {
         std::cout << "\nInvalid arithmetic expression provided.";
-        return;
+        return results;
     }
 
     // Retrieve the LHS of the parsed arithmetic expression (the operand).
@@ -115,11 +123,10 @@ void Runner::processInstruction(const std::string& input)
                   for (const auto& [operand, value] :
                        mState.storeExpressionValue(expressionOperand, variantValue)) {
 
-                      std::cout << operand << " = " << value << "\n";
+                      results.emplace_back(operand + " = " + std::to_string(value));
                   }
 
                   mState.updateOperationOrder(expressionOperand);
-
               }
               //   Or did we get a list of unmet dependencies instead?
               else if constexpr (std::is_same_v<VariantType, std::unordered_set<std::string>>) {
@@ -127,16 +134,21 @@ void Runner::processInstruction(const std::string& input)
                   if (!variantValue.empty()) {
 
                       // Update dependencies since we didn't get a valid value after the evaluation.
-                      if (mState.storeExpressionDependencies(
+                      if (!mState.storeExpressionDependencies(
                                 expressionOperand, std::move(expressionParser), variantValue)) {
-                          mState.updateOperationOrder(expressionOperand);
+
+                          std::cout << "Cyclic dependency found: \'" << expressionOperand
+                                    << "\' is already a dependency in another expression\n";
                       }
+                      mState.updateOperationOrder(expressionOperand);
                   }
               } else {
                   std::cerr << "Unknown result type returned\n";
               }
           },
           evaluationResult);
+
+    return results;
 }
 
 } // namespace Calculator

@@ -202,12 +202,8 @@ bool Parser::validateRHS()
 
         const auto& previousValidCharacter = validatedString.back();
 
-        // // Trim input string
-        // if (character == cSpaceChar) {
-        //     continue;
-        // }
         // Check digits validity
-        /* else */ if (isSingleDigitInteger(previousValidCharacter, character)) {
+        if (isSingleDigitInteger(previousValidCharacter, character)) {
 
             // Right parenthesis should not be followed by a digit
             if (previousValidCharacter == cRightParenthesis) {

@@ -73,9 +73,7 @@ bool State::storeExpressionDependencies(const std::string& operand,
         const auto dependantOperand = itr->second;
 
         if (dependencies.contains(dependantOperand)) {
-            std::cout << "Cyclic dependency found: \'" << operand << "\' depends on \'"
-                      << dependantOperand << "\' but \'" << dependantOperand << "\' already depends on \'"
-                      << operand << "\'\n";
+            // Cyclic dependency found.
             return false;
         }
     }
@@ -120,7 +118,7 @@ std::vector<std::string> State::undoLastRegisteredOperations(const int undoCount
 {
     std::vector<std::string> deletedOperations;
 
-    if (undoCount <= 0) {
+    if (undoCount <= 0 || static_cast<int>(mOperandOrderStack.size()) < undoCount) {
         return deletedOperations;
     }
 
