@@ -7,60 +7,86 @@
 #include "ast/Node.hpp"
 
 /**
- * @brief Class responsible for parsing arithmetic expressions
+ * @brief Class responsible for parsing arithmetic expressions and generating Abstract Syntax Trees
  */
 class Parser
 {
 public:
+    /// Alias representing a whole AST (stack of AST node unique pointers)
+    using ASTofRSH = std::stack<std::unique_ptr<AST::Node>>;
+
     /**
      * @brief Class constructor
      *
-     * @param[in] inputToParse String containing data to be parsed
+     * @param[in] inputToParse String containing the arithmetic expression to parse
      */
     explicit Parser(const std::string& inputToParse);
 
     /**
      * @brief Checks the input for a valid arithmetic expression and generates the appropriate AST
+     *
+     * @return True if parsing and AST generation were successful (false otherwise)
      */
     [[nodiscard]] bool execute();
 
+    /**
+     * @brief Retrieves the operand of the LHS (Left Hand Side) expression
+     *
+     * @return String containing the operand of the LHS
+     */
     [[nodiscard]] std::string getOperandOfLHS() const;
 
     /**
-     * @brief Getter for the generated AST
+     * @brief Getter for the generated AST of the RHS (Right Hand Side) expression
      *
-     * @return Reference to the root node of the generated AST
+     * @return Shared pointer to a stack containing all the ATS nodes
      */
-    [[nodiscard]] const std::unique_ptr<AST::Node>& getASTOfRHS() const;
+    [[nodiscard]] std::shared_ptr<ASTofRSH> getASTOfRHS() const;
 
 private:
+    /**
+     * @brief Parses the LHS of the arithmetic expression
+     *
+     * @return True if parsing the LHS was successful (false otherwise)
+     */
     [[nodiscard]] bool parseLHS();
+
+    /**
+     * @brief Parses the RHS (Right Hand Side) of the arithmetic expression
+     *
+     * @return True if parsing the RHS was successful (false otherwise)
+     */
     [[nodiscard]] bool parseRHS();
 
     /**
-     * @brief Helper method used to assert if the input string is a valid arithmetic expression
+     * @brief Validates the RHS of the arithmetic expression
+     *
+     * @return True if the RHS is a valid expression, false otherwise
      */
-    bool validateRHS();
+    [[nodiscard]] bool validateRHS();
 
     /**
-     * @brief Helper method used to parse an arithmetic expression into an AST
+     * @brief Creates an AST for the RHS of the arithmetic expression
      *
-     * The AST is created using the Shunting Yard algorithm
+     * Uses the Shunting Yard algorithm to convert the RHS expression into an AST
+     *
+     * @return True if AST creation was successful (false otherwise)
      */
-    bool createASTforRHS();
+    [[nodiscard]] bool createASTforRHS();
 
 private:
+    ///  String representation of the LHS operand
     std::string mLHSString;
+
+    /// String representation of the RHS expression
     std::string mRHSString;
 
-    /// String containing the input of the parser
+    /// Input string to parse
     std::string mInputString;
 
-    /// LIFO container used to handle the operators of the RHS arithmetic expression
+    /// Stack to manage the operators of the RHS arithmetic expression during RHS expression parsing
     std::stack<char> mRHSOperatorStack;
 
-
-    // TODO: Make this a struct.
-    /// LIFO container used to handle the operands of the RHS arithmetic expression
-    std::stack<std::unique_ptr<AST::Node>> mRHSValueStack;
+    /// Shared ownership pointer holding a stack of AST nodes that represent the RHS expression
+    std::shared_ptr<ASTofRSH> mRHSValueStack;
 };

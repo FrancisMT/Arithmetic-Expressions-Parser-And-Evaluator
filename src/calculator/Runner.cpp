@@ -1,23 +1,33 @@
 #include "Runner.hpp"
 
 #include "evaluator/Evaluator.hpp"
+#include "parser/Parser.hpp"
 #include "utils/Constants.hpp"
 #include "utils/Methods.hpp"
-#include "parser/Parser.hpp"
 
 namespace {
-/// Supported string for the undo command.
+/// Supported string for the undo command
 constexpr auto cUndoCommand{"undo"};
-/// Supported string for the result command.
+/// Supported string for the result command
 constexpr auto cResultCommand{"result"};
 
+/**
+ * @brief Enum representing operations supported by the calculator
+ */
 enum class SupportedOperation : uint8_t {
 
     RESULT = 0, // Present result of last fulfilled operation
     UNDO = 1,   // Undo a certain amount of operation
-    OTHER = 2   // Most probably an arithmetic expression (needs further evaluation).
+    OTHER = 2   // Most probably an arithmetic expression (needs further evaluation)
 };
 
+/**
+ * @brief Parses an input string to determine the type of operation that is being requested
+ *
+ * @param[in] input The input string to parse
+ *
+ * @return A pair consisting of the type of operation and an optional integer argument
+ */
 std::pair<SupportedOperation, std::optional<int>> getOperationRequest(const std::string& input)
 {
     const auto inputStringTokens
@@ -44,10 +54,6 @@ std::pair<SupportedOperation, std::optional<int>> getOperationRequest(const std:
 } // namespace
 
 namespace Calculator {
-
-Runner::Runner() {}
-
-Runner::~Runner() {}
 
 std::vector<std::string> Runner::processInstruction(const std::string& input)
 {
@@ -98,28 +104,29 @@ std::vector<std::string> Runner::processInstruction(const std::string& input)
         return results;
     }
 
-    // Retrieve the LHS of the parsed arithmetic expression (the operand).
+    // Retrieve the LHS of the parsed arithmetic expression (an operand).
     const auto expressionOperand = expressionParser.getOperandOfLHS();
-    // Retrieve the RHS of the parsed arithmetic expression (the AST).
-    const auto& expressionAST = expressionParser.getASTOfRHS();
+    // Retrieve the RHS of the parsed arithmetic expression (an AST).
+    const auto expressionAST = expressionParser.getASTOfRHS();
 
     // Try to evaluate the AST to check if we can obtain
-    // either a valid result
-    // or a list of unmet dependencies.
-    Evaluator astEvaluator(expressionAST,
-                           /* map with the current values of each operand
-                              is used as a lookup table when evaluation the AST.  */
+    // either a valid result or a list of unmet dependencies
+    Evaluator astEvaluator(expressionAST->top(),
+                           // the map with the current values of each operand is provided for
+                           // dependency lookup when evaluation the AST
                            mState.getOperandValueMap());
 
-    // Get the result of the evaluation and process it accordingly.
+    // Get the result of the evaluation and process it according to its type
     const auto evaluationResult = astEvaluator.execute();
     std::visit(
           [&](auto&& variantValue) {
+              // Expected types: int or unordered_set<std::string>
               using VariantType = std::decay_t<decltype(variantValue)>;
 
               // Did we get a value after the expression was evaluated?
               if constexpr (std::is_same_v<VariantType, int>) {
 
+                  // Then, store it
                   for (const auto& [operand, value] :
                        mState.storeExpressionValue(expressionOperand, variantValue)) {
 
@@ -128,19 +135,20 @@ std::vector<std::string> Runner::processInstruction(const std::string& input)
 
                   mState.updateOperationOrder(expressionOperand);
               }
-              //   Or did we get a list of unmet dependencies instead?
+              // Or did we get a list of unmet dependencies instead?
               else if constexpr (std::is_same_v<VariantType, std::unordered_set<std::string>>) {
 
                   if (!variantValue.empty()) {
 
-                      // Update dependencies since we didn't get a valid value after the evaluation.
+                      // Then, update the state of the dependencies
                       if (!mState.storeExpressionDependencies(
-                                expressionOperand, std::move(expressionParser), variantValue)) {
+                                expressionOperand, expressionAST, variantValue)) {
 
-                          std::cout << "Cyclic dependency found: \'" << expressionOperand
+                          std::cerr << "Cyclic dependency found: \'" << expressionOperand
                                     << "\' is already a dependency in another expression\n";
+                      } else {
+                          mState.updateOperationOrder(expressionOperand);
                       }
-                      mState.updateOperationOrder(expressionOperand);
                   }
               } else {
                   std::cerr << "Unknown result type returned\n";

@@ -6,11 +6,11 @@
 #include <ranges>
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 #include "ast/Node.hpp"
 #include "utils/Constants.hpp"
 #include "utils/Methods.hpp"
-#include <unordered_set>
 
 namespace {
 using namespace Utils::Constants;
@@ -18,9 +18,9 @@ using namespace Utils::Constants;
 /**
  * @brief Checks if the provided character is a parenthesis
  *
- * @param character character to evaluate
+ * @param[in] character Character to evaluate
  *
- * @return Boolean containing the verification result
+ * @return True if is a supported parenthesis (false otherwise)
  */
 constexpr bool isParenthesis(const char character)
 {
@@ -36,9 +36,9 @@ constexpr bool isParenthesis(const char character)
 /**
  * @brief Checks if the provided character is a valid binary operator
  *
- * @param character character to evaluate
+ * @param[in] character Character to evaluate
  *
- * @return Boolean containing the verification result
+ * @return True if is a supported operator (false otherwise)
  */
 constexpr bool isOperator(const char character)
 {
@@ -56,10 +56,10 @@ constexpr bool isOperator(const char character)
 /**
  * @brief Checks if the provided character is a single digit integer
  *
- * @param previousCharacter adjacent character to evaluate (can not be a digit)
- * @param character character to evaluate
+ * @param[in] previousCharacter Adjacent character to evaluate (cannot be a digit)
+ * @param[in] character Character to evaluate
  *
- * @return Boolean containing the verification result
+ * @return True if is a single digit character (false otherwise)
  */
 constexpr bool isSingleDigitInteger(const char previousCharacter, const char character)
 {
@@ -69,10 +69,10 @@ constexpr bool isSingleDigitInteger(const char previousCharacter, const char cha
 /**
  * @brief Checks if the provided character is a unary minus
  *
- * @param previousCharacter adjacent character to evaluate (can not be an operator, space or '(')
- * @param character character to evaluate
+ * @param[in] previousCharacter Adjacent character to evaluate (cannot be an operator, space or '(')
+ * @param[in] character Character to evaluate
  *
- * @return Boolean containing the verification result
+ * @return True if character is an unary minus (false otherwise)
  */
 constexpr bool isUnaryMinus(const char previousCharacter, const char character)
 {
@@ -82,22 +82,25 @@ constexpr bool isUnaryMinus(const char previousCharacter, const char character)
 }
 
 /**
- * @brief Checks precedence "score" of an operator
+ * @brief Determines the precedence level of an operator based on its type
  *
- * This helper method is used during the construction of the AST: each operator being processed
- * causes its preceding operators to "execute" (new nodes in the AST are created) only if it has a
- * higher precedence value
+ * When constructing the AST using the Shunting Yard algorithm,
+ * each operator being processed causes its preceding operators to "execute"
+ * (new nodes in the AST are created) only if it has a higher precedence value
  *
- * Opening parentheses act as operators with a very low precedence value
- * Closing parentheses act as operators with a very right precedence value
+ * Precedence levels:
+ * - '('        : 1 (lowest precedence)
+ * - '+', '-'   : 2
+ * - '*', '/'   : 3
+ * - ')'        : 4 (highest precedence)
  *
- * @param operation operator to check the precedence of
+ * @param[in] op Operator whose precedence is to be determined
  *
- * @return The operator's precedence value
+ * @return The precedence level of the operator
  */
-constexpr uint8_t operatorPrecedence(char operation)
+constexpr uint8_t operatorPrecedence(const char op)
 {
-    switch (operation) {
+    switch (op) {
     case cRightParenthesis:
         return 4;
     case cMultOp:
@@ -116,6 +119,7 @@ constexpr uint8_t operatorPrecedence(char operation)
 
 Parser::Parser(const std::string& inputToParse)
     : mInputString{inputToParse}
+    , mRHSValueStack{std::make_unique<ASTofRSH>()}
 {
 }
 
@@ -136,21 +140,22 @@ bool Parser::execute()
     return parseLHS() && parseRHS();
 }
 
-[[nodiscard]] std::string Parser::getOperandOfLHS() const
+std::string Parser::getOperandOfLHS() const
 {
     return mLHSString;
 }
 
-const std::unique_ptr<AST::Node>& Parser::getASTOfRHS() const
+std::shared_ptr<Parser::ASTofRSH> Parser::getASTOfRHS() const
 {
-    return mRHSValueStack.top();
+    return mRHSValueStack;
 }
 
 bool Parser::parseLHS()
 {
     // TODO[FM]: Add support for a more complex parsing.
     // Ideally we would also create an AST for the LHS but for now,
-    // we only support LHS values with a single letter operands (e.g. "x=2+2").
+    // we only support LHS values with a single letter operands
+    // (e.g. 'x' from in "x=2+2")
     if (mLHSString.size() != 1) {
         return false;
     }
@@ -174,32 +179,35 @@ bool Parser::validateRHS()
     std::string validatedString{cLeftParenthesis};
     validatedString.reserve(mRHSString.size());
 
-    uint8_t leftParenthesisCounter{0};
-    uint8_t rightParenthesisCounter{0};
+    uint32_t leftParenthesisCounter{0};
+    uint32_t rightParenthesisCounter{0};
 
     for (const auto& character : mRHSString) {
 
         const auto& previousValidCharacter = validatedString.back();
 
-        // Check digits validity
+        // Check digit validity
+        // TODO: Add support for expressions with integers with more than one digit
         if (isSingleDigitInteger(previousValidCharacter, character)) {
 
-            // Right parenthesis should not be followed by a digit
+            // Right parenthesis should not be followed by a digit (e.g. ")2" )
             if (previousValidCharacter == cRightParenthesis) {
                 std::cerr << "Invalid expression provided" << "\n";
                 return false;
             }
         }
-        // Check operators validity
+        // Check operator validity
         else if (isOperator(character)) {
 
             // Check if the operator is used as a unary minus
+            // TODO: Add support for expressions with negative integers (e.g. "-2*3")
             if (isUnaryMinus(previousValidCharacter, character)) {
                 std::cout << "Negative values are not currently supported" << "\n";
                 return false;
             }
 
-            // Check if the operator syntax is correct
+            // Check if the previous character was not and operator or a left parenthesis
+            // (e.g. "++2" or ")+2")
             if (isOperator(previousValidCharacter) || previousValidCharacter == cLeftParenthesis) {
                 std::cerr << "Invalid expression provided" << "\n";
                 return false;
@@ -215,7 +223,8 @@ bool Parser::validateRHS()
                 ++rightParenthesisCounter;
             }
 
-            // Left parenthesis should not be preceded by a digit
+            // Left parenthesis should not be preceded by a digit (e.g. "2("))
+            // TODO: Add support for expressions with implicit multiplication
             if (character == cLeftParenthesis && std::isdigit(previousValidCharacter)) {
                 std::cerr << "Invalid expression provided" << "\n";
                 return false;
@@ -242,32 +251,35 @@ bool Parser::validateRHS()
         return false;
     }
 
+    // Finalize the string wrapping by adding a right parenthesis at the end
     validatedString.append(1, cRightParenthesis);
     mRHSString.swap(validatedString);
     mRHSString.shrink_to_fit();
-
-#ifdef DEBUG_BUILD
-    std::cout << "Validated expression: " << mRHSString << "\n";
-#endif
 
     return true;
 }
 
 bool Parser::createASTforRHS()
 {
+    if (mRHSString.empty()) {
+        std::cerr << "Empty expression provided" << "\n";
+        return false;
+    }
+
+    // Helper lambda used to add new nodes to the AST
     const auto generateNewNode = [this]() {
-        if (!mRHSOperatorStack.empty() && !mRHSValueStack.empty()) {
+        if (!mRHSOperatorStack.empty() && !mRHSValueStack->empty()) {
 
             const auto operation = mRHSOperatorStack.top();
             mRHSOperatorStack.pop();
 
-            auto rightValue = std::move(mRHSValueStack.top());
-            mRHSValueStack.pop();
+            auto rightValue = std::move(mRHSValueStack->top());
+            mRHSValueStack->pop();
 
-            auto leftValue = std::move(mRHSValueStack.top());
-            mRHSValueStack.pop();
+            auto leftValue = std::move(mRHSValueStack->top());
+            mRHSValueStack->pop();
 
-            mRHSValueStack.emplace(std::make_unique<AST::Node>(
+            mRHSValueStack->emplace(std::make_unique<AST::Node>(
                   operation, std::move(leftValue), std::move(rightValue)));
         }
     };
@@ -275,11 +287,15 @@ bool Parser::createASTforRHS()
     // Analyse input
     for (const auto& character : mRHSString) {
 
-        // Account for the possibility that we might have a variable in the provided string.
+        // Account for the possibility that we might have either a number or a variable in the
+        // provided string
         if (std::isdigit(character) || std::isalpha(character)) {
-            mRHSValueStack.emplace(std::make_unique<AST::Node>(character));
+            mRHSValueStack->emplace(std::make_unique<AST::Node>(character));
 
         } else if (isOperator(character)) {
+
+            // Generate new nodes until an operator with a lower precedence
+            // than the new one is found on the top of the operator stack
             while (!mRHSOperatorStack.empty()
                    && operatorPrecedence(mRHSOperatorStack.top())
                             >= operatorPrecedence(character)) {
@@ -292,6 +308,8 @@ bool Parser::createASTforRHS()
             mRHSOperatorStack.push(character);
 
         } else if (character == cRightParenthesis) {
+
+            // Generate new nodes until we reach the closest left parenthesis
             while (!mRHSOperatorStack.empty() && mRHSOperatorStack.top() != cLeftParenthesis) {
                 generateNewNode();
             }
@@ -303,15 +321,15 @@ bool Parser::createASTforRHS()
         }
     }
 
-    // Generates new nodes until the operator stack is empty
+    // Generate new nodes until the operator stack is empty
     while (!mRHSOperatorStack.empty()) {
         generateNewNode();
     }
 
 #ifdef DEBUG_BUILD
-    if (!mRHSValueStack.empty()) {
-        std::cout << "Generated Abstract Syntax Tree\n";
-        AST::printAST(mRHSValueStack.top());
+    if (!mRHSValueStack->empty()) {
+        std::cout << "Generated Abstract Syntax Tree:\n";
+        AST::printAST(mRHSValueStack->top());
     }
 #endif
 
