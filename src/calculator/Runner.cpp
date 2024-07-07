@@ -136,7 +136,7 @@ std::vector<std::string> Runner::processInstruction(const std::string& input)
                   mState.updateOperationOrder(expressionOperand);
               }
               // Or did we get a list of unmet dependencies instead?
-              else if constexpr (std::is_same_v<VariantType, std::unordered_set<std::string>>) {
+              else if constexpr (std::is_same_v<VariantType, Evaluator::Dependencies>) {
 
                   if (!variantValue.empty()) {
 

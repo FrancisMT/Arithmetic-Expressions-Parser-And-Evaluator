@@ -1,43 +1,38 @@
 #include "gtest/gtest.h"
 
-#include "Parser/Parser.h"
+#include "parser/Parser.hpp"
 
 using namespace ::testing;
 
 /**
- * @brief Test fixture for the Parser
+ * @brief Test fixture for the Parser class
  */
 class ParserUnitTest : public Test
 {
 protected:
     /**
-     * @brief Method used to validate whether parser inputs are valid or not
+     * @brief Validates whether the parser is successful or not
      *
-     * @param isSuccessScenario True if a success scenario is to be tested, false otherwise
+     * @param[in] isSuccessScenario True if a success scenario is to be tested (false otherwise)
      */
-    void testInputs(bool isSuccessScenario = true)
+    void testInputs(const bool isSuccessScenario)
     {
         for (const auto& inputString : mTestInputs) {
             Parser parser(inputString);
-
-            if (isSuccessScenario) {
-                ASSERT_NO_THROW(parser.execute());
-            } else {
-                ASSERT_THROW(parser.execute(), std::invalid_argument);
-            }
+            ASSERT_EQ(isSuccessScenario, parser.execute());
         }
     }
 
     /**
-     * @brief Helper method used to compare two ASTs
+     * @brief Compares two ASTs to determine if they are identical
      *
-     * @param rootNodeA Reference to the root node of the first AST
-     * @param rootNodeB Reference to the root node of the second AST
+     * @param[in] rootNodeA Reference to the root node of the first AST
+     * @param[in] rootNodeB Reference to the root node of the second AST
      *
-     * @return Boolean containing the comparison result
+     * @return True if the ASTs are identical (false otherwise)
      */
-    [[nodiscard]] inline bool areASTsIdentical(const std::unique_ptr<Node>& rootNodeA,
-                                               const std::unique_ptr<Node>& rootNodeB)
+    [[nodiscard]] bool areASTsIdentical(const std::unique_ptr<AST::Node>& rootNodeA,
+                                        const std::unique_ptr<AST::Node>& rootNodeB)
     {
         return (!rootNodeA && !rootNodeB)
                || ((rootNodeA && rootNodeB)
@@ -49,13 +44,13 @@ protected:
     }
 
     /**
-     * @brief Helper method used to count the total number of nodes inside an AST
+     * @brief Counts the total number of nodes inside an AST
      *
-     * @param rootNode Reference to the root node of the AST
+     * @param[in] rootNode Reference to the root node of the AST
      *
-     * @return Number of nodes inside the AST
+     * @return Number of nodes of the AST
      */
-    [[nodiscard]] inline uint32_t getNumberOfNodes(const std::unique_ptr<Node>& rootNode)
+    [[nodiscard]] uint32_t getNumberOfNodes(const std::unique_ptr<AST::Node>& rootNode)
     {
         return !rootNode ? 0
                          : 1 + getNumberOfNodes(rootNode->getReferenceToLeftNodePointer())
@@ -68,102 +63,113 @@ protected:
 };
 
 /**
- * Tests that the Parser throws an exception when the input string is empty
+ * @brief Tests that the Parser fails when the input string is empty
  */
-TEST_F(ParserUnitTest, parserThrowsWhenInputIsEmpty)
+TEST_F(ParserUnitTest, parserFailsWhenInputIsEmpty)
 {
     mTestInputs = {""};
     testInputs(false);
 }
 
 /**
- * Tests that the Parser throws an exception when the input has negative numbers
+ * @brief Tests that the Parser fails when the input has negative numbers
  */
-TEST_F(ParserUnitTest, parserThrowsWhenNegativeNumbersAreProvided)
+TEST_F(ParserUnitTest, parserFailsWhenNegativeNumbersAreProvided)
 {
-    mTestInputs = {"-1", "-22", "2+(-3*2)", "(-5)", "-(2*3)"};
+    mTestInputs = {"a = -1", "b = -22", "c = 2+(-3*2)", "d = (-5)", "e = -(2*3)"};
     testInputs(false);
 }
 
 /**
- * Tests that the Parser throws an exception when the input has literals that are too large
+ * @brief Tests that the Parser fails when the input has integers with more than one digit
  */
-TEST_F(ParserUnitTest, parserThrowsWhenLiteralsAreTooLarge)
+TEST_F(ParserUnitTest, parserFailsWhenLiteralsAreTooLarge)
 {
-    mTestInputs = {"42", "1337", "11*11+3-(20)", "10  +  1"};
+    mTestInputs = {"a = 42", "b = 1337", "c = 11*11+3-(20)", "d = 10  +  1"};
     testInputs(false);
 }
 
 /**
- * Tests that the Parser throws an exception when the input has parentheses that do not come in
- * pairs
+ * @brief Tests that the Parser fails when the input has unpaired parentheses
  */
-TEST_F(ParserUnitTest, parserThrowsWhenParenthesesAreNotPaired)
+TEST_F(ParserUnitTest, parserFailsWhenParenthesesAreNotPaired)
 {
-    mTestInputs = {"(1+2))", "(3*  3", "4+2*(5/7))"};
+    mTestInputs = {"a = (1+2))", "b = (3*  3", "c = 4+2*(5/7))"};
     testInputs(false);
 }
 
 /**
- * Tests that the Parser throws an exception when the input has parentheses that are incorrectly
- * used
+ * @brief Tests that the Parser fails when the input has incorrectly used parentheses
  */
-TEST_F(ParserUnitTest, parserThrowsWhenParenthesesAreIncorrectlyUsed)
+TEST_F(ParserUnitTest, parserFailsWhenParenthesesAreIncorrectlyUsed)
 {
-    mTestInputs = {")1+2(", "(3*()3)", "4+2)(*(5/7)"};
+    mTestInputs = {"a = )1+2(", "b = (3*()3)", "c = 4+2)(*(5/7)"};
     testInputs(false);
 }
 
 /**
- * Tests that the Parser throws an exception when the input has missing operators
+ * @brief Tests that the Parser fails when the input has missing operators
  */
-TEST_F(ParserUnitTest, parserThrowsWhenOperatorsAreMissing)
+TEST_F(ParserUnitTest, parserFailsWhenOperatorsAreMissing)
 {
-    mTestInputs = {"(4 + 5 (7 - 3)) - 2", "2+(5*3)7"};
+    mTestInputs = {"a = (4 + 5 (7 - 3)) - 2", "b = 2+(5*3)7"};
     testInputs(false);
 }
 
 /**
- * Tests that the Parser throws an exception when the input has operators used incorrectly
+ * @brief Tests that the Parser fails when the input has incorrectly used operators
  */
-TEST_F(ParserUnitTest, parserThrowsWhenOperatorsAreIncorrectlyUsed)
+TEST_F(ParserUnitTest, parserFailsWhenOperatorsAreIncorrectlyUsed)
 {
-    mTestInputs = {"(4 +* 5 - (7 - 3)) - 2", "2+(/5*3)7", "*(4+5)-3", "+-42", "1-3+3/7+"};
+    mTestInputs = {" a = (4 +* 5 - (7 - 3)) - 2",
+                   "b = 2+(/5*3)7",
+                   "c = *(4+5)-3",
+                   "d = +-42",
+                   "e = 1-3+3/7+"};
     testInputs(false);
 }
 
 /**
- * Tests that the Parser does not throw an exception when the input has the correct syntax
+ * @brief Tests that the Parser succeeds when the input has the correct syntax
  */
-TEST_F(ParserUnitTest, parserDoesNotThrowWhenValidInputIsProvided)
+TEST_F(ParserUnitTest, parserSucceedsWhenValidInputIsProvided)
 {
-    mTestInputs = {"(4 + 5 * (7 - 3)) - 2",
-                   "4+5+7/2",
-                   "2+3*(1-2)",
-                   "5+(1*2)",
-                   "2+3* 1 - 2",
-                   "7+3*(1/(2/(3+1)-1))",
-                   "(2*(3+6/2)/4)"};
+    mTestInputs = {"a = (4 + 5 * (7 - 3)) - 2",
+                   "b = 4+5+7/2",
+                   "c = 2+3*(1-2)",
+                   "d = 5+(1*2)",
+                   "e = 2+3* 1 - 2",
+                   "f = 7+3*(1/(2/(3+1)-1))",
+                   "g = (2*(3+6/2)/4)"};
     testInputs(true);
 }
 
 /**
- * Tests that the Parser is able to generate an AST with the correct number of nodes
+ * @brief Tests that the Parser is able to retrieve a correct LHS operand
+ * and constructs a valid RHS AST from the input
  */
-TEST_F(ParserUnitTest, parserGenerasteAST)
+TEST_F(ParserUnitTest, parserRetrievesCorrectOperandAndAST)
 {
-    Parser parser("5+(1*2)");
-    ASSERT_NO_THROW(parser.execute());
-    ASSERT_NE(parser.getAST(), nullptr);
-    ASSERT_EQ(AST::getNumberOfNodes(parser.getAST()), 5);
+    constexpr auto validArithmeticExpression{"a = 5+(1*2)"};
+    constexpr auto expectedOperand{"a"};
+    const auto expectedAST = std::make_unique<AST::Node>(
+          '+', // First Level
+          std::make_unique<AST::Node>('5'),
+          std::make_unique<AST::Node>('*', // Second Level
+                                      std::make_unique<AST::Node>('1'),
+                                      std::make_unique<AST::Node>('2')));
+    constexpr auto expectedASTNodeCount{5};
 
-    using namespace AST;
-    const auto rootNode
-          = std::make_unique<Node>('+', // First Level
-                                   std::make_unique<Node>('5'),
-                                   std::make_unique<Node>('*', // Second Level
-                                                          std::make_unique<Node>('1'),
-                                                          std::make_unique<Node>('2')));
+    Parser parser(validArithmeticExpression);
+    ASSERT_TRUE(parser.execute());
+    ASSERT_EQ(parser.getOperandOfLHS(), expectedOperand);
 
-    ASSERT_TRUE(areASTsIdentical(rootNode, parser.getAST()));
+    const auto retrievedAST = parser.getASTOfRHS();
+
+    ASSERT_NE(retrievedAST, nullptr);
+    ASSERT_FALSE(retrievedAST->empty());
+
+    const auto& astRootNode = retrievedAST->top();
+    ASSERT_EQ(getNumberOfNodes(astRootNode), expectedASTNodeCount);
+    ASSERT_TRUE(areASTsIdentical(astRootNode, expectedAST));
 }

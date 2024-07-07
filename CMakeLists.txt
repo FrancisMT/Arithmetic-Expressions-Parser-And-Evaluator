@@ -75,7 +75,7 @@ endif()
 ## Build options ###############################################################
 ################################################################################
 
-option(BUILD_TESTS "Build tests" OFF)
+option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DOCUMENTATION "Build documentation" OFF)
 
 ################################################################################

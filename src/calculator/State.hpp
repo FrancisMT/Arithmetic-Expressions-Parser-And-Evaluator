@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "evaluator/Evaluator.hpp"
 #include "parser/Parser.hpp"
 
 namespace Calculator {
@@ -58,10 +59,9 @@ public:
      * @return True if the dependencies were stored successfully
      * @return False if a cyclic dependency was found
      */
-    [[nodiscard]] bool
-          storeExpressionDependencies(const std::string& operand,
-                                      std::shared_ptr<Parser::ASTofRSH> expressionAST,
-                                      const std::unordered_set<std::string>& dependencies);
+    [[nodiscard]] bool storeExpressionDependencies(const std::string& operand,
+                                                   std::shared_ptr<Parser::ASTofRSH> expressionAST,
+                                                   const Evaluator::Dependencies& dependencies);
 
     /**
      * @brief Retrieves the map of operand values for lookup

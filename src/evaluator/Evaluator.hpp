@@ -16,8 +16,10 @@
 class Evaluator
 {
 public:
+    /// Alias representing a set of operands that are dependencies of an expression
+    using Dependencies = std::unordered_set<std::string>;
     /// Alias representing the result of the evaluation: an value or a set of dependencies
-    using Result = std::variant<int, std::unordered_set<std::string>>;
+    using Result = std::variant<int, Dependencies>;
 
     /**
      * @brief Class constructor
@@ -62,6 +64,6 @@ private:
     const std::unordered_map<std::string, int>& mDependenciesLookupMap;
 
     /// Set of dependencies encountered during AST evaluation
-    /// (operands not found on the dependencies map)
-    std::unordered_set<std::string> mDependencies;
+    /// (operands not found on the dependencies lookup map)
+    Dependencies mDependencies;
 };

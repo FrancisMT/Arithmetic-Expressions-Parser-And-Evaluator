@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include "evaluator/Evaluator.hpp"
 #include "utils/Methods.hpp"
 
 namespace Calculator {
@@ -44,9 +43,8 @@ std::vector<std::pair<std::string, int>>
 
                       // If the evaluation results in an integer value,
                       // store it and check its dependencies
-                      if (std::holds_alternative<int>(evaluatorResult)) {
-                          const auto dependantOperandResult = std::get<int>(evaluatorResult);
-                          storeValueAndCheckDependencies(dependantOperand, dependantOperandResult);
+                      if (const int* dependantOperandResult = std::get_if<int>(&evaluatorResult)) {
+                          storeValueAndCheckDependencies(dependantOperand, *dependantOperandResult);
                       }
                   }
               }
@@ -60,7 +58,7 @@ std::vector<std::pair<std::string, int>>
 
 bool State::storeExpressionDependencies(const std::string& operand,
                                         std::shared_ptr<Parser::ASTofRSH> expressionAST,
-                                        const std::unordered_set<std::string>& dependencies)
+                                        const Evaluator::Dependencies& dependencies)
 {
 
     // Check for cyclic dependencies (e.g.: a = c, b = a, c = b).

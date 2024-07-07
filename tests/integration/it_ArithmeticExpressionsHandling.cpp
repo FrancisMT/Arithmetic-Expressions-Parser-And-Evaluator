@@ -1,27 +1,37 @@
 #include "gtest/gtest.h"
 
-#include "Evaluator/Evaluator.h"
-#include "Parser/Parser.h"
+#include "calculator/Runner.hpp"
+#include "utils/Methods.hpp"
 
 /**
- * Tests that the program is able to correctly parse and evaluate arithmetic expressions
+ * @brief Tests that the calculator correctly performs a series of arithmetic operations
+ * and handles commands like "undo" and "result".
  */
-TEST(ArithmeticExpressionsHandlingTest, outputsTheCorrectResultOfArithmeticExpressions)
+TEST(CalculatorIntegrationTest, calculatorCorrectlyPerformsSupportedOperations)
 {
+    Calculator::Runner calculator;
 
-    const auto expressionsAndResultsList = {std::pair{"(4 + 5 * (7 - 3)) - 2", 22},
-                                            std::pair{"4+5+7/2", 12},
-                                            std::pair{"2+3*(1-2)", -1},
-                                            std::pair{"5+(1*2)", 7},
-                                            std::pair{"2+3* 1 - 2", 3},
-                                            std::pair{"7+3*(1/(2/(3+1)-1))", 1},
-                                            std::pair{"(2*(3+6/2)/4)", 3}};
+    // Iterate over a list of arithmetic expressions and the corresponding expected results
+    for (const auto& [arithmeticExpression, expectedResults] :
+         std::initializer_list<std::pair<std::string, std::vector<std::string>>>{
+               {"a=2+3", {"a = 5"}},                   // Basic addition
+               {"b=e-2", {}},                          // Subtraction with unresolved dependency
+               {"c=1+2", {"c = 3"}},                   // Basic addition
+               {"d=e/3", {}},                          // Division with unresolved dependency
+               {"e=a+c", {"e = 8", "b = 6", "d = 2"}}, // Addition with resolved dependencies with
+                                                       // resolution of dependent expressions
+               {"f=3+4", {"f = 7"}},                   // Basic addition
+               {"undo 2", {"delete f", "delete e"}},   // Undo the last two operations
+               {"e=2+2", {"e = 4", "b = 2", "d = 1"}}, // Redefinition of 'e' with
+                                                       // resolution of dependent expressions
+               {"f=g*7", {}},                          // Multiplication with unresolved dependency
+               {"result", {"return e = 4"}},           // Request result of the last fulfilled expression
+               {"g=3*2", {"g = 6", "f = 42"}}          // Multiplication and with
+                                                       // resolution of dependent expressions
+         }) {
 
-    for (const auto& [arithmeticExpressions, expectedResult] : expressionsAndResultsList) {
-        Parser parser(arithmeticExpressions);
-        ASSERT_NO_THROW(parser.execute());
-
-        Evaluator evaluator(parser.getAST());
-        ASSERT_EQ(evaluator.execute(), expectedResult);
+        // Check if the calculator results match the expected ones
+        const auto operationResults = calculator.processInstruction(arithmeticExpression);
+        ASSERT_EQ(operationResults, expectedResults);
     }
 }
