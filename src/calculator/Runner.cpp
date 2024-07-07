@@ -1,8 +1,8 @@
 #include "Runner.hpp"
 
 #include "evaluator/Evaluator.hpp"
-#include "mathUtils/Constants.hpp"
-#include "mathUtils/Methods.hpp"
+#include "utils/Constants.hpp"
+#include "utils/Methods.hpp"
 #include "parser/Parser.hpp"
 
 namespace {
@@ -21,7 +21,7 @@ enum class SupportedOperation : uint8_t {
 std::pair<SupportedOperation, std::optional<int>> getOperationRequest(const std::string& input)
 {
     const auto inputStringTokens
-          = MathUtils::Methods::splitString(input, MathUtils::Constants::cWhiteSpace);
+          = Utils::Methods::splitString(input, Utils::Constants::cWhiteSpace);
 
     if (inputStringTokens.size() == 1 && inputStringTokens.back() == cResultCommand) {
         return {SupportedOperation::RESULT, {}};
@@ -63,7 +63,7 @@ std::vector<std::string> Runner::processInstruction(const std::string& input)
             const auto lastOperation = mState.getLastFulfilledOperation();
 
             if (lastOperation == decltype(lastOperation)()) {
-                std::cout << "There is no result available yet\n";
+                std::cerr << "There is no result available yet\n";
             } else {
                 results.emplace_back("return " + lastOperation.first + " = "
                                      + std::to_string(lastOperation.second));

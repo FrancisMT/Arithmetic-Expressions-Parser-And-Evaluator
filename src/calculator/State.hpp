@@ -16,32 +16,6 @@ public:
     State();
     ~State();
 
-    // void printDebug()
-    // {
-    //     std::cout << "\n operandOrderStack\n";
-    //     auto stack = mOperandOrderStack;
-    //     while (!stack.empty()) {
-    //         std::cout << stack.top() << std::endl;
-    //         stack.pop();
-    //     }
-
-    //     std::cout << "\n operandValuesMap\n";
-    //     for (const auto& pair : mOperandValuesMap) {
-    //         std::cout << pair.first << ": " << pair.second << std::endl;
-    //     }
-
-    //     std::cout << "\n operandDependenciesMap\n";
-    //     for (const auto& pair : mOperandDependenciesMap) {
-    //         std::cout << pair.first << ": " << pair.second << std::endl;
-    //     }
-
-    //     std::cout << "\n expressionsWithDependenciesMap\n";
-    //     for (const auto& pair : mExpressionsWithDependenciesMap) {
-    //         std::cout << pair.first << ": \n";
-    //         AST::printAST(pair.second.getASTOfRHS());
-    //     }
-    // }
-
     void updateOperationOrder(const std::string& operand);
 
     // Every time we get a new value from an expression, check if it resolves any pending

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace MathUtils::Constants {
+namespace Utils::Constants {
 /// Valid white space character
 inline constexpr auto cWhiteSpace{' '};
 /// Valid left parenthesis character
@@ -15,6 +15,6 @@ inline constexpr auto cSubOp{'-'};
 inline constexpr auto cMultOp{'*'};
 /// Valid division binary operator character
 inline constexpr auto cDivOp{'/'};
-/// Valid assignemnt operator character
+/// Valid assignment operator character
 inline constexpr auto cAssignOp{'='};
-} // namespace MathUtils::Constants
+} // namespace Utils::Constants

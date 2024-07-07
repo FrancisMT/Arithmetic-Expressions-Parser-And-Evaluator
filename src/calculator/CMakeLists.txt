@@ -1,4 +1,4 @@
-project(calculator)
+project(Calculator)
 
 add_library(${PROJECT_NAME} STATIC
     Runner.cpp
@@ -6,6 +6,6 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE parser
-    PRIVATE evaluator
+    PRIVATE Parser
+    PRIVATE Evaluator
 )

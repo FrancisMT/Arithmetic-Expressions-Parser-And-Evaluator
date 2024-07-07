@@ -4,10 +4,10 @@
 #include <stack>
 #include <string>
 
-#include "ast/Node.h"
+#include "ast/Node.hpp"
 
 /**
- * @brief Class responsible for parsing the right hand side of an arithmetic expression into an AST
+ * @brief Class responsible for parsing arithmetic expressions
  */
 class Parser
 {
@@ -15,7 +15,7 @@ public:
     /**
      * @brief Class constructor
      *
-     * @param inputToParse String containing data to be parsed
+     * @param[in] inputToParse String containing data to be parsed
      */
     explicit Parser(const std::string& inputToParse);
 

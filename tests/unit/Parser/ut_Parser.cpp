@@ -28,6 +28,40 @@ protected:
         }
     }
 
+    /**
+     * @brief Helper method used to compare two ASTs
+     *
+     * @param rootNodeA Reference to the root node of the first AST
+     * @param rootNodeB Reference to the root node of the second AST
+     *
+     * @return Boolean containing the comparison result
+     */
+    [[nodiscard]] inline bool areASTsIdentical(const std::unique_ptr<Node>& rootNodeA,
+                                               const std::unique_ptr<Node>& rootNodeB)
+    {
+        return (!rootNodeA && !rootNodeB)
+               || ((rootNodeA && rootNodeB)
+                   && (rootNodeA->getNodeValue() == rootNodeB->getNodeValue())
+                   && areASTsIdentical(rootNodeA->getReferenceToLeftNodePointer(),
+                                       rootNodeB->getReferenceToLeftNodePointer())
+                   && areASTsIdentical(rootNodeA->getReferenceToRightNodePointer(),
+                                       rootNodeB->getReferenceToRightNodePointer()));
+    }
+
+    /**
+     * @brief Helper method used to count the total number of nodes inside an AST
+     *
+     * @param rootNode Reference to the root node of the AST
+     *
+     * @return Number of nodes inside the AST
+     */
+    [[nodiscard]] inline uint32_t getNumberOfNodes(const std::unique_ptr<Node>& rootNode)
+    {
+        return !rootNode ? 0
+                         : 1 + getNumberOfNodes(rootNode->getReferenceToLeftNodePointer())
+                                 + getNumberOfNodes(rootNode->getReferenceToRightNodePointer());
+    }
+
 protected:
     /// List of inputs to be tested
     std::vector<std::string> mTestInputs;

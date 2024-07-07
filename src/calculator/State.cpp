@@ -3,7 +3,7 @@
 #include <functional>
 
 #include "evaluator/Evaluator.hpp"
-#include "mathUtils/Methods.hpp"
+#include "utils/Methods.hpp"
 
 namespace Calculator {
 

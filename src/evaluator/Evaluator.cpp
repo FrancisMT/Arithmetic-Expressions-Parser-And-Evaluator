@@ -1,6 +1,6 @@
 #include "Evaluator.hpp"
 
-#include "mathUtils/Constants.hpp"
+#include "utils/Constants.hpp"
 
 namespace {
 /**
@@ -14,7 +14,7 @@ namespace {
  */
 constexpr auto performArithmeticOperation(char operation, float leftOperand, float rightOperand)
 {
-    using namespace MathUtils::Constants;
+    using namespace Utils::Constants;
     switch (operation) {
     case cAddOp:
         return leftOperand + rightOperand;
@@ -31,7 +31,7 @@ constexpr auto performArithmeticOperation(char operation, float leftOperand, flo
 
 constexpr bool isOperator(const char character)
 {
-    using namespace MathUtils::Constants;
+    using namespace Utils::Constants;
 
     switch (character) {
     case cAddOp:
@@ -55,7 +55,7 @@ Evaluator::Evaluator(const std::unique_ptr<AST::Node>& astRootNode,
 Evaluator::Result Evaluator::execute()
 {
     if (!mAstRootNode) {
-        std::cout << "Empty AST";
+        std::cerr << "Empty AST";
         return {};
     }
 

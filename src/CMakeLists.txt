@@ -1,4 +1,4 @@
-project(Arithmetic-Expressions-Parser-Evaluator)
+project(Calculator-Challenge)
 
 include_directories(./)
 add_subdirectory(parser)
@@ -12,7 +12,5 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE parser
-    PRIVATE evaluator
-    PRIVATE calculator
+    PRIVATE Calculator
 )

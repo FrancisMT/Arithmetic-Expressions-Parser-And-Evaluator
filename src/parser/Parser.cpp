@@ -7,15 +7,13 @@
 #include <utility>
 #include <vector>
 
-#include "ast/Node.h"
-
-#include "mathUtils/Constants.hpp"
+#include "ast/Node.hpp"
+#include "utils/Constants.hpp"
+#include "utils/Methods.hpp"
 #include <unordered_set>
 
 namespace {
-using namespace MathUtils::Constants;
-/// Space character used to facilitate the parsing process
-constexpr auto cSpaceChar{' '};
+using namespace Utils::Constants;
 
 /**
  * @brief Checks if the provided character is a parenthesis
@@ -79,7 +77,7 @@ constexpr bool isSingleDigitInteger(const char previousCharacter, const char cha
 constexpr bool isUnaryMinus(const char previousCharacter, const char character)
 {
     return character == cSubOp
-           && (isOperator(previousCharacter) || previousCharacter == cSpaceChar
+           && (isOperator(previousCharacter) || std::isspace(previousCharacter)
                || previousCharacter == cLeftParenthesis);
 }
 
@@ -114,26 +112,6 @@ constexpr uint8_t operatorPrecedence(char operation)
         return 0;
     }
 }
-
-std::vector<std::string> splitString(const std::string& stringToSplit, const char splitChar)
-{
-    std::vector<std::string> output;
-    for (const auto& splitValue : stringToSplit | std::ranges::views::split(splitChar)) {
-        output.emplace_back(splitValue.begin(), splitValue.end());
-    }
-
-    return output;
-}
-
-void removeWhiteSpacesFromString(std::string& stringToTrim)
-{
-    stringToTrim.erase(
-          std::remove_if(stringToTrim.begin(),
-                         stringToTrim.end(),
-                         [](unsigned char stringChar) { return std::isspace(stringChar); }),
-          stringToTrim.end());
-}
-
 } // namespace
 
 Parser::Parser(const std::string& inputToParse)
@@ -143,9 +121,10 @@ Parser::Parser(const std::string& inputToParse)
 
 bool Parser::execute()
 {
-    removeWhiteSpacesFromString(mInputString);
+    Utils::Methods::removeWhiteSpacesFromString(mInputString);
 
-    const auto inputStringTokens = splitString(mInputString, MathUtils::Constants::cAssignOp);
+    const auto inputStringTokens
+          = Utils::Methods::splitString(mInputString, Utils::Constants::cAssignOp);
 
     if (inputStringTokens.size() != 2) {
         return false;
@@ -187,7 +166,7 @@ bool Parser::parseRHS()
 bool Parser::validateRHS()
 {
     if (mRHSString.empty()) {
-        std::cout << "Empty expression provided" << "\n";
+        std::cerr << "Empty expression provided" << "\n";
         return false;
     }
 
@@ -207,7 +186,7 @@ bool Parser::validateRHS()
 
             // Right parenthesis should not be followed by a digit
             if (previousValidCharacter == cRightParenthesis) {
-                std::cout << "Invalid expression provided" << "\n";
+                std::cerr << "Invalid expression provided" << "\n";
                 return false;
             }
         }
@@ -222,7 +201,7 @@ bool Parser::validateRHS()
 
             // Check if the operator syntax is correct
             if (isOperator(previousValidCharacter) || previousValidCharacter == cLeftParenthesis) {
-                std::cout << "Invalid expression provided" << "\n";
+                std::cerr << "Invalid expression provided" << "\n";
                 return false;
             }
         }
@@ -238,13 +217,13 @@ bool Parser::validateRHS()
 
             // Left parenthesis should not be preceded by a digit
             if (character == cLeftParenthesis && std::isdigit(previousValidCharacter)) {
-                std::cout << "Invalid expression provided" << "\n";
+                std::cerr << "Invalid expression provided" << "\n";
                 return false;
             }
         }
         // Account for single character variables
         else if (!std::isalpha(character)) {
-            std::cout << "Invalid expression provided" << "\n";
+            std::cerr << "Invalid expression provided" << "\n";
             return false;
         }
 
@@ -253,13 +232,13 @@ bool Parser::validateRHS()
 
     // Validate the amount of parenthesis pairs
     if (leftParenthesisCounter != rightParenthesisCounter) {
-        std::cout << "Parenthesis do not match" << "\n";
+        std::cerr << "Parenthesis do not match" << "\n";
         return false;
     }
 
     // Validate that the expression does not end with an operator
     if (isOperator(validatedString.back())) {
-        std::cout << "Invalid expression provided" << "\n";
+        std::cerr << "Invalid expression provided" << "\n";
         return false;
     }
 

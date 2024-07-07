@@ -59,7 +59,7 @@ A C++ program that can parse and evaluate arithmetic expressions
 
 ## Usage
 ```
-❯ ./Arithmetic-Expressions-Parser-Evaluator
+❯ ./Calculator-Challenge
 Input Arithmetic expression to evaluate: (4 + 5 * (7 - 3)) - 2
 Validating input string: (4 + 5 * (7 - 3)) - 2
 Validated String: ((4+5*(7-3))-2)

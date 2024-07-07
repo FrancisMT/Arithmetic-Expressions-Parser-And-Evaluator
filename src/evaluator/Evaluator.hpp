@@ -4,7 +4,7 @@
 #include <optional>
 #include <variant>
 
-#include "ast/Node.h"
+#include "ast/Node.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
