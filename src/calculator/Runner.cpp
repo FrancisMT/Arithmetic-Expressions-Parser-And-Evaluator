@@ -103,12 +103,13 @@ void Runner::processInstruction(const std::string& input)
                               is used as a lookup table when evaluation the AST.  */
                            mState.getOperandValueMap());
 
+    // Get the result of the evaluation and process it accordingly.
     const auto evaluationResult = astEvaluator.execute();
-
     std::visit(
           [&](auto&& variantValue) {
               using VariantType = std::decay_t<decltype(variantValue)>;
 
+              // Did we get a value after the expression was evaluated?
               if constexpr (std::is_same_v<VariantType, int>) {
 
                   for (const auto& [operand, value] :
@@ -119,7 +120,9 @@ void Runner::processInstruction(const std::string& input)
 
                   mState.updateOperationOrder(expressionOperand);
 
-              } else if constexpr (std::is_same_v<VariantType, std::unordered_set<std::string>>) {
+              }
+              //   Or did we get a list of unmet dependencies instead?
+              else if constexpr (std::is_same_v<VariantType, std::unordered_set<std::string>>) {
 
                   if (!variantValue.empty()) {
 
@@ -129,6 +132,8 @@ void Runner::processInstruction(const std::string& input)
                           mState.updateOperationOrder(expressionOperand);
                       }
                   }
+              } else {
+                  std::cerr << "Unknown result type returned\n";
               }
           },
           evaluationResult);

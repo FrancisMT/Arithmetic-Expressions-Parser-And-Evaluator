@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "ast/Node.h"
-#include "mathUtils/Constants.hpp"
 
+#include "mathUtils/Constants.hpp"
 #include <unordered_set>
 
 namespace {
@@ -147,13 +147,6 @@ bool Parser::execute()
 
     const auto inputStringTokens = splitString(mInputString, MathUtils::Constants::cAssignOp);
 
-#ifdef DEBUG_BUILD
-    std::cout << "\nInput String tokens:\n";
-    for (const auto& stringToken : inputStringTokens) {
-        std::cout << stringToken << "\n";
-    }
-#endif
-
     if (inputStringTokens.size() != 2) {
         return false;
     }
@@ -193,8 +186,6 @@ bool Parser::parseRHS()
 
 bool Parser::validateRHS()
 {
-    std::cout << "Validating input string: " << mRHSString << "\n";
-
     if (mRHSString.empty()) {
         std::cout << "Empty expression provided" << "\n";
         return false;
@@ -279,15 +270,16 @@ bool Parser::validateRHS()
     validatedString.append(1, cRightParenthesis);
     mRHSString.swap(validatedString);
     mRHSString.shrink_to_fit();
-    std::cout << "Validated String: " << mRHSString << "\n";
+
+#ifdef DEBUG_BUILD
+    std::cout << "Validated expression: " << mRHSString << "\n";
+#endif
 
     return true;
 }
 
 bool Parser::createASTforRHS()
 {
-    std::cout << "Generating Abstract Syntax Tree\n";
-
     const auto generateNewNode = [this]() {
         if (!mRHSOperatorStack.empty() && !mRHSValueStack.empty()) {
 
