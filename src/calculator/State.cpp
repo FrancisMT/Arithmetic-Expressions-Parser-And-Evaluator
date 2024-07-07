@@ -26,35 +26,10 @@ std::vector<std::pair<std::string, int>>
           [&](const std::string& newOperand, int newValue) {
               mOperandValuesMap.insert_or_assign(newOperand, newValue);
 
-              //   TODO: Check how to fix cyclic dependencies: the following is not working.
-              //   if (mOperandValuesMap.insert_or_assign(newOperand, newValue).second) {
-              //       // They key "newOperand" didn't  exist in the map: delete a possible
-              //       expression
-              //       // with dependencies.
-              //     //   if (mExpressionsWithDependenciesMap.contains(newOperand)) {
-              //     //       mExpressionsWithDependenciesMap.erase(newOperand);
-              //     //   }
-
-              //       // This probably means that the we are being requested a value
-              //       override.
-              //       // Furthermore, we need to take into account cyclic dependencies:
-              //       // What happens if we end-up with the following operation order?
-              //       // -> 1. a = b | 2. b = a | 3. a = 1
-              //       // To account for this, we do a "surgical override" and check
-              //       // if the operand is currently assigned to an expression that
-              //       // depends on another operand, and then remove it.
-
-              //       // If the newOperand (that has a value assigned to it),
-              //       // had previously an expression with dependencies assigned,
-              //       // delete the expression. This will avoid cyclic dependencies.
-              //       // (e.g. 1. a = b | 2. b = a | 3. c = a+b | 4.a = )
-
-              //       //   MathUtils::Methods::removeEntryWithValue(mOperandDependenciesMap,
-              //       //   newOperand);
-              //   }
-
               affectedValues.emplace_back(newOperand, newValue);
 
+              // Check if there are any expressions that depend on the provided operand
+              // (whose value is now known) and if so, try to resolve them.
               const auto operandDependencyRange = mOperandDependenciesMap.equal_range(newOperand);
 
               for (auto itr = operandDependencyRange.first; itr != operandDependencyRange.second;
@@ -83,15 +58,39 @@ std::vector<std::pair<std::string, int>>
     return affectedValues;
 }
 
-void State::storeExpressionDependencies(const std::string& operand,
+bool State::storeExpressionDependencies(const std::string& operand,
                                         Parser&& parser,
                                         const std::unordered_set<std::string>& dependencies)
 {
+
+    // Check for cyclic dependencies (e.g. 1. a = c | 2. b = a | 3. c = a):
+    // - we check if there is already an entry in the operand dependencies map
+    // where a [operand, dependency] pair exists.
+    const auto operandDependencyRange = mOperandDependenciesMap.equal_range(operand);
+
+    for (auto itr = operandDependencyRange.first; itr != operandDependencyRange.second; ++itr) {
+
+        const auto dependantOperand = itr->second;
+
+        if (dependencies.contains(dependantOperand)) {
+            std::cout << "Cyclic dependency found: \'" << operand << "\' depends on \'"
+                      << dependantOperand << "\' but \'" << dependantOperand << "\' already depends on \'"
+                      << operand << "\'\n";
+            return false;
+        }
+    }
+
+    // Store the parser containing the expression for the provided operand
+    // since it might be resolved later if the dependencies are met.
     mExpressionsWithDependenciesMap.insert_or_assign(operand, std::forward<Parser>(parser));
 
+    // Add the new dependencies to the operand dependencies map
+    // so that the operand becomes dependent on each of them.
     for (const auto& dependency : dependencies) {
         mOperandDependenciesMap.emplace(dependency, operand);
     }
+
+    return true;
 }
 
 const std::unordered_map<std::string, int>& State::getOperandValueMap() const

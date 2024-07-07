@@ -49,11 +49,12 @@ public:
     std::vector<std::pair<std::string, int>>
           storeExpressionValue(const std::string& operand, const int value);
 
-    void storeExpressionDependencies(const std::string& operand,
+    // Returns false when cyclic dependencies are found.
+    [[nodiscard]] bool storeExpressionDependencies(const std::string& operand,
                                      Parser&& parser,
                                      const std::unordered_set<std::string>& dependencies);
 
-    const std::unordered_map<std::string, int>& getOperandValueMap() const;
+    [[nodiscard]] const std::unordered_map<std::string, int>& getOperandValueMap() const;
 
     // Return the result of the last requested operation that has already been fulfilled.
     [[nodiscard]] std::pair<std::string, int> getLastFulfilledOperation() const;
@@ -69,9 +70,8 @@ private:
     // Map holding the operands with already available values.
     std::unordered_map<std::string, int> mOperandValuesMap;
 
-    // Map used to keep track of the dependencies between operands. This is a one to many
-    // association since they key is the dependency and the value is a list of operands that
-    // depend on the operand defined by the key.
+    // Map used to keep track of the dependencies between operands.
+    // The key is an operand and the value is another operand that depends on the key.
     std::unordered_multimap<std::string, std::string> mOperandDependenciesMap;
 
     // Map used to keep track of arithmetic expressions that depend on the value of other

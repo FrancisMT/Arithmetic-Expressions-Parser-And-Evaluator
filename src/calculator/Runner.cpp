@@ -122,11 +122,12 @@ void Runner::processInstruction(const std::string& input)
               } else if constexpr (std::is_same_v<VariantType, std::unordered_set<std::string>>) {
 
                   if (!variantValue.empty()) {
-                      // Update dependencies since we didn't get a valid value after the evaluation.
-                      mState.storeExpressionDependencies(
-                            expressionOperand, std::move(expressionParser), variantValue);
 
-                      mState.updateOperationOrder(expressionOperand);
+                      // Update dependencies since we didn't get a valid value after the evaluation.
+                      if (mState.storeExpressionDependencies(
+                                expressionOperand, std::move(expressionParser), variantValue)) {
+                          mState.updateOperationOrder(expressionOperand);
+                      }
                   }
               }
           },
