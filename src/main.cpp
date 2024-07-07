@@ -7,7 +7,7 @@
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     Calculator::Runner calculator;
-    
+
     // const auto getUserInputString = [] {
     //     std::cout << "\nInput Arithmetic expression to evaluate: ";
     //     std::string input;
@@ -19,10 +19,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
     // while (true) {
     //     const auto operationResults = calculator.processInstruction(getUserInputString());
 
-    //     for (auto itr = operationResults.cbegin(); itr != operationResults.cend();) {
-    //         std::cout << *itr;
-    //         ++itr;
-    //         std::cout << (itr != operationResults.cend() ? ", " : "\n");
+    //     for (auto itr = operationResults.cbegin(); itr != operationResults.cend(); ++itr) {
+    //         std::cout << *itr << (std::next(itr) != operationResults.cend() ? ", " : "\n");
     //     }
     // }
 
@@ -40,10 +38,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
         const auto operationResults = calculator.processInstruction(input);
 
-        for (auto itr = operationResults.cbegin(); itr != operationResults.cend();) {
-            std::cout << *itr;
-            ++itr;
-            std::cout << (itr != operationResults.cend() ? ", " : "\n");
+        for (auto itr = operationResults.cbegin(); itr != operationResults.cend(); ++itr) {
+            std::cout << *itr << (std::next(itr) != operationResults.cend() ? ", " : "\n");
         }
     }
 
