@@ -1,53 +1,9 @@
-# Arithmetic Expressions Parser And Evaluator
-A C++ program that can parse and evaluate arithmetic expressions
-
-
-## Challenge description
-
->Create a C++ program that can parse and evaluate arithmetic expressions.
->Parsing and evaluating should be two independent steps that are separated
->by a data structure, the abstract syntax tree (AST).
->
->The core program should not use anything apart from the C++17 STL.
->Please also refrain from using regular expressions, they usually
->complicate this specific task.
->
->Frameworks for building and testing can be used, though.
->
->Arithmetic expressions consist of decimal integers (to simplify,
->only single-digit numbers from 0 to 9 are allowed as literals, i.e. neither
->multi-digit nor fractional numbers are allowed as literals).
->combined using the binary operators +, *, /, - and parentheses
->and should respect the usual precedence relations.
->
->Since all tokens consist of single characters only, the parser
->can be implemented without a tokenizer. Furthermore, a simple
->top-down parser should be sufficient, implementing the shunting-yard
->algorithm is not required (we assume that the machine stack is
->large enough).
->
->The program should detect invalid input and report an error
->(a case-specific error message or source location is not necessary).
->
->Evaluation should be performed on integers.
->
->Unit tests are appreciated. You can use a framework of you choice for that,
->or no framework at all.
->
->Examples:
->
->On input `(4 + 5 * (7 - 3)) - 2`, the program should output `22`
->
->On input `4+5+7/2` it should output `12`.
->
->The input `10 + 1` is invalid (literal is too large)
->
->The input `-10` is invalid (either negative literal or unary minus)
-
+# Calculator challenge
+A C++ calculator that can receive different instructions and react accordingly.
 
 ## Tools
-* C++17
-* Cmake
+* C++20
+* CMake
 * GTest
 
 ## Build
@@ -60,40 +16,43 @@ A C++ program that can parse and evaluate arithmetic expressions
 ## Usage
 ```
 ❯ ./Calculator-Challenge
-Input Arithmetic expression to evaluate: (4 + 5 * (7 - 3)) - 2
-Validating input string: (4 + 5 * (7 - 3)) - 2
-Validated String: ((4+5*(7-3))-2)
-Generating Abstract Syntax Tree
-Generated Abstract Syntax Tree
--
-    +
-        4
-        *
-            5
-            -
-                7
-                3
-    2
-Arithmetic Expression Result: 22
+Input Arithmetic expression to evaluate: a=2+3
+a = 5
 
+Input Arithmetic expression to evaluate: b=e-2
+
+Input Arithmetic expression to evaluate: c=1+2
+c = 3
+
+Input Arithmetic expression to evaluate: d=e/3
+
+Input Arithmetic expression to evaluate: e=a+c
+e = 8, b = 6, d = 2
+
+Input Arithmetic expression to evaluate: f=3+4
+f = 7
+
+Input Arithmetic expression to evaluate: undo 2
+delete f, delete e
+
+Input Arithmetic expression to evaluate: e=2+2
+e = 4, b = 2, d = 1
+
+Input Arithmetic expression to evaluate: f=g*7
+
+Input Arithmetic expression to evaluate: result
+return e = 4
+
+Input Arithmetic expression to evaluate: g=3*2
+g = 6, f = 42
 ```
 
 ## Coverage
-
-### Install GTest
-```shell
-sudo apt install libgtest-dev
-cd /usr/src/gtest
-sudo cmake CMakeLists.txt
-sudo make
-cd lib
-sudo cp *.a /usr/lib
-```
+CMake already takes care of automatically integrating Google test into the project, so there is no need to manually install and configure it.
 
 ### Run tests
 ```
 ❯ ctest
-Test project /home/Projects/Arithmetic-Expressions-Parser-And-Evaluator/cmake-build-debug
       Start  1: EvaluatorUnitTest.evaluatorThrowsIfInputIsNull
  1/12 Test  #1: EvaluatorUnitTest.evaluatorThrowsIfInputIsNull .....................................   Passed    0.00 sec
       Start  2: EvaluatorUnitTest.evaluatorOutputsCorrectResult
